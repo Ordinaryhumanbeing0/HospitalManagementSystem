@@ -176,8 +176,76 @@ A core requirement is supporting **at least 10 simultaneous appointment requests
    });
    ```
 
-3. **Queue / Optimistic Concurrency**:
-   - Status transitions (`BOOKED`, `PENDING_PAYMENT`, `CANCELLED`) with database timestamps and versioning to reject stale submissions gracefully.
+### 📊 Concurrency Sequence Diagram (Pessimistic Lock & Zero Double-Booking)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor PatientA as Patient A (Client 1)
+    actor PatientB as Patient B (Client 2)
+    participant API as Next.js Server Action
+    participant DB as PostgreSQL Transaction (ACID)
+    participant Audit as AuditLog Service
+
+    Note over PatientA,PatientB: Both clients submit booking for the SAME slot simultaneously
+    PatientA->>+API: bookAppointmentAction(DocID, Date, Slot="10:30")
+    PatientB->>+API: bookAppointmentAction(DocID, Date, Slot="10:30")
+    
+    API->>+DB: BEGIN TRANSACTION (Serializable / Row Lock)
+    DB-->>API: Acquire Lock for (DocID, Date, "10:30")
+    
+    rect rgb(240, 255, 240)
+        Note over API,DB: Request 1 (Winner)
+        API->>DB: Check slot availability -> Slot is OPEN
+        API->>DB: INSERT INTO Appointment (status="CONFIRMED")
+        DB-->>API: Commit Transaction
+        API->>Audit: logAudit(APPOINTMENT_BOOKED)
+        API-->>PatientA: 200 OK: Appointment Confirmed
+    end
+
+    rect rgb(255, 240, 240)
+        Note over API,DB: Request 2 (Rejected Conflict)
+        API->>DB: Check slot availability -> Slot is RESERVED
+        DB-->>API: Conflict Error: "Slot already reserved"
+        API->>DB: ROLLBACK
+        API-->>-PatientB: 409 Conflict: "Time slot 10:30 is already booked."
+    end
+```
+
+### 🔄 Appointment Booking & Rescheduling Activity Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> SelectSpecialist: Patient / Staff opens /appointments/book
+    SelectSpecialist --> PickDate: Select Department & Doctor
+    PickDate --> QuerySlots: Pick Target Date
+    QuerySlots --> CheckOnDuty: getAvailableSlotsAction()
+    
+    state CheckOnDuty <<choice>>
+    CheckOnDuty --> SelectSlot: Doctor on duty & slots available
+    CheckOnDuty --> PickDate: Doctor off duty on this day
+    
+    SelectSlot --> ConfirmDetails: Select 30-min time slot chip
+    ConfirmDetails --> TransactionLock: Submit Booking
+    
+    state TransactionLock <<choice>>
+    TransactionLock --> AppointmentConfirmed: Lock Acquired & Created
+    TransactionLock --> SelectSlot: Race Condition / Slot Conflict
+    
+    AppointmentConfirmed --> ConsultRoom: Consultation Scheduled
+    
+    state ConsultRoom {
+        [*] --> Upcoming
+        Upcoming --> Rescheduled: Patient reschedules slot
+        Upcoming --> Cancelled: Patient cancels visit
+        Upcoming --> InConsultation: Doctor starts visit
+        InConsultation --> PrescriptionIssued: Doctor writes Rx & marks COMPLETED
+    }
+    
+    PrescriptionIssued --> EHRTimeline: Attached to Patient Medical History
+    Cancelled --> [*]
+    EHRTimeline --> [*]
+```
 
 ---
 

@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --canvas: #ffffff;
+    --ink: #0a0b0d;
+    --body: #5b616e;
+    --hairline: #dee1e6;
+    --surface-strong: #eef0f3;
+    --primary: #0052ff;
+  }
+
+  body {
+    color: #5b616e;
+    background-color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: #0a0b0d;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  /* Institutional Design System Utilities */
+  .btn-primary {
+    @apply inline-flex items-center justify-center bg-brand hover:bg-brand-active disabled:bg-brand-disabled text-white font-medium text-sm sm:text-base rounded-pill px-5 py-2.5 h-11 transition-colors duration-150 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center bg-surface-strong hover:bg-hairline text-ink font-medium text-sm sm:text-base rounded-pill px-5 py-2.5 h-11 transition-colors duration-150;
+  }
+
+  .btn-pill-cta {
+    @apply inline-flex items-center justify-center bg-brand hover:bg-brand-active text-white font-medium text-base rounded-pill px-8 py-3.5 h-14 transition-colors duration-150;
+  }
+
+  .badge-pill {
+    @apply inline-flex items-center gap-1.5 bg-surface-strong text-ink text-xs font-semibold uppercase tracking-wider rounded-pill px-3 py-1;
+  }
+
+  .search-pill {
+    @apply bg-surface-strong text-ink text-sm rounded-pill px-4 py-2.5 h-11 border border-transparent focus:border-brand focus:bg-white focus:outline-none transition-all duration-150;
+  }
+
+  .text-input-md {
+    @apply bg-white text-ink text-sm rounded-xl px-4 py-3 h-12 border border-hairline focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all duration-150;
+  }
+
+  .card-institutional {
+    @apply bg-white rounded-xl border border-hairline p-6 transition-all duration-150;
+  }
+
+  .card-institutional:hover {
+    @apply shadow-soft;
+  }
+}
+
+@layer utilities {
+  .number-mono {
+    font-family: var(--font-mono), monospace;
+    font-feature-settings: 'tnum' on, 'lnum' on;
+  }
+}
