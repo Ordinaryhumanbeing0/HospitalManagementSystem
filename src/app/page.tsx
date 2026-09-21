@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   Clock,
   Droplet,
+  Pill,
+  FileText,
 } from 'lucide-react';
 import { Navbar } from '@/components/ui/Navbar';
 
@@ -42,19 +44,39 @@ export default function HomePage() {
               Automated patient onboarding, multi-department physician catalogs, conflict-free appointment scheduling, and role-based access control.
             </p>
 
-            <div className="pt-4 flex flex-wrap items-center gap-4">
-              <Link
-                href="/login"
-                className="btn-pill-cta inline-flex items-center gap-2"
-              >
-                Access Portal <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center bg-surface-dark-elevated hover:bg-white/10 text-white font-semibold text-base rounded-pill px-8 py-3.5 h-14 transition border border-white/10"
-              >
-                Register as Patient
-              </Link>
+            <div className="pt-4 space-y-3">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-soft">
+                Choose Dedicated Healthcare Portal:
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Patient Entry */}
+                <div className="flex items-center gap-2 p-1.5 rounded-pill bg-surface-dark-elevated border border-white/10">
+                  <span className="text-xs text-muted-soft pl-3 pr-1 font-medium">Patient:</span>
+                  <Link
+                    href="/login?role=PATIENT"
+                    className="inline-flex items-center gap-1.5 bg-brand hover:bg-brand-active text-white text-xs font-semibold rounded-pill px-4 py-2 transition shadow-sm"
+                  >
+                    Sign In <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="inline-flex items-center text-xs font-medium text-white/80 hover:text-white px-3 py-2 transition"
+                  >
+                    Register
+                  </Link>
+                </div>
+
+                {/* Doctor Entry */}
+                <div className="flex items-center gap-2 p-1.5 rounded-pill bg-surface-dark-elevated border border-white/10">
+                  <span className="text-xs text-muted-soft pl-3 pr-1 font-medium">Physician:</span>
+                  <Link
+                    href="/login?role=DOCTOR"
+                    className="inline-flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-pill px-4 py-2 transition shadow-sm"
+                  >
+                    Doctor Sign In <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
             </div>
 
             {/* Micro stats banner */}
@@ -134,6 +156,109 @@ export default function HomePage() {
                 <span>Security Engine: Bcrypt + JOSE JWT</span>
                 <span className="text-semantic-up font-semibold">Zero Double-Booking</span>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Dedicated Dual Healthcare Portals: Patient vs Doctor */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full border-b border-hairline">
+        <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
+          <div className="badge-pill !bg-brand/10 !text-brand">Role-Dedicated Gateways</div>
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink">
+            Two Independent, Specialized Healthcare Portals
+          </h2>
+          <p className="text-body text-sm">
+            Tailored digital workflows for patients and medical practitioners with strictly separated dashboards and permissions.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Patient Portal Gateway Card */}
+          <div className="rounded-2xl border border-hairline p-8 bg-surface-soft hover:shadow-soft transition space-y-6 relative overflow-hidden flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="badge-pill !bg-brand !text-white text-xs">
+                  <Users className="h-3.5 w-3.5 mr-1" /> Patient Portal
+                </span>
+                <span className="text-xs text-muted font-medium">Self-Service Healthcare</span>
+              </div>
+              <h3 className="text-xl font-semibold text-ink">
+                Patient Consultation & Health Records
+              </h3>
+              <p className="text-sm text-body leading-relaxed">
+                Search specialists, check live duty hours, and reserve verified 30-minute consultation slots. Access your complete chronological EHR history, lab reports, and doctor prescriptions.
+              </p>
+              <ul className="space-y-2 text-xs text-body pt-2">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-brand shrink-0" />
+                  <span>Real-time doctor shift lookup & conflict-free slot booking</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-brand shrink-0" />
+                  <span>Interactive cancellation & slot rescheduling</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-brand shrink-0" />
+                  <span>Unified EHR timeline for lab reports & digital prescriptions</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="pt-6 border-t border-hairline flex items-center gap-3">
+              <Link
+                href="/login?role=PATIENT"
+                className="btn-primary !h-11 !px-6 text-xs flex items-center gap-2"
+              >
+                Patient Sign In <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                href="/register"
+                className="btn-secondary !h-11 !px-5 text-xs"
+              >
+                Register as Patient
+              </Link>
+            </div>
+          </div>
+
+          {/* Doctor Portal Gateway Card */}
+          <div className="rounded-2xl border border-hairline p-8 bg-surface-soft hover:shadow-soft transition space-y-6 relative overflow-hidden flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="badge-pill !bg-sky-700 !text-white text-xs">
+                  <Stethoscope className="h-3.5 w-3.5 mr-1" /> Doctor Portal
+                </span>
+                <span className="text-xs text-muted font-medium">Clinical Workstation</span>
+              </div>
+              <h3 className="text-xl font-semibold text-ink">
+                Physician Consultation & Prescription Portal
+              </h3>
+              <p className="text-sm text-body leading-relaxed">
+                Configure your weekly shifts, monitor pending patient queues, manage appointments, access clinical records, and issue structured digital prescriptions with auto-completion.
+              </p>
+              <ul className="space-y-2 text-xs text-body pt-2">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-sky-700 shrink-0" />
+                  <span>Direct weekly working shift & slot duration configuration</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-sky-700 shrink-0" />
+                  <span>Appointment intake queue with patient profile preview</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-sky-700 shrink-0" />
+                  <span>Digital prescription builder with dosage, frequency, & notes</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="pt-6 border-t border-hairline flex items-center gap-3">
+              <Link
+                href="/login?role=DOCTOR"
+                className="btn-primary !bg-sky-700 hover:!bg-sky-800 !h-11 !px-6 text-xs flex items-center gap-2"
+              >
+                Doctor Sign In <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
           </div>
         </div>

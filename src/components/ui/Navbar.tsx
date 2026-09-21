@@ -63,92 +63,221 @@ export function Navbar({ user, dark = false }: NavbarProps) {
             </div>
           </Link>
 
-          {/* Primary Navigation Links when logged in */}
+          {/* Primary Navigation Links strictly separated by role */}
           {user && (
             <nav className="hidden md:flex items-center gap-1 ml-4">
-              <Link
-                href={getDashboardLink()}
-                className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
-                  pathname.includes('/dashboard')
-                    ? 'bg-surface-strong text-ink font-semibold'
-                    : 'text-body hover:text-ink hover:bg-surface-soft'
-                }`}
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/appointments"
-                className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
-                  pathname === '/appointments'
-                    ? 'bg-surface-strong text-ink font-semibold'
-                    : 'text-body hover:text-ink hover:bg-surface-soft'
-                }`}
-              >
-                Appointments
-              </Link>
-              <Link
-                href="/appointments/book"
-                className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
-                  pathname.startsWith('/appointments/book')
-                    ? 'bg-surface-strong text-ink font-semibold'
-                    : 'text-body hover:text-ink hover:bg-surface-soft'
-                }`}
-              >
-                Book Visit
-              </Link>
-              <Link
-                href="/medical-records"
-                className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
-                  pathname.startsWith('/medical-records')
-                    ? 'bg-surface-strong text-ink font-semibold'
-                    : 'text-body hover:text-ink hover:bg-surface-soft'
-                }`}
-              >
-                Medical Records
-              </Link>
-              {(user.role === 'ADMIN' || user.role === 'RECEPTIONIST' || user.role === 'DOCTOR') && (
-                <Link
-                  href="/patients"
-                  className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
-                    pathname.startsWith('/patients')
-                      ? 'bg-surface-strong text-ink font-semibold'
-                      : 'text-body hover:text-ink hover:bg-surface-soft'
-                  }`}
-                >
-                  Patients
-                </Link>
+              {/* PATIENT Navigation */}
+              {user.role === 'PATIENT' && (
+                <>
+                  <Link
+                    href="/patient/dashboard"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname === '/patient/dashboard'
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/appointments"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname === '/appointments'
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    My Appointments
+                  </Link>
+                  <Link
+                    href="/appointments/book"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname.startsWith('/appointments/book')
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Book Visit
+                  </Link>
+                  <Link
+                    href="/medical-records"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname.startsWith('/medical-records')
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Health Records & Rx
+                  </Link>
+                </>
               )}
-              <Link
-                href="/doctors"
-                className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
-                  pathname.startsWith('/doctors')
-                    ? 'bg-surface-strong text-ink font-semibold'
-                    : 'text-body hover:text-ink hover:bg-surface-soft'
-                }`}
-              >
-                Doctors
-              </Link>
-              <Link
-                href="/departments"
-                className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
-                  pathname.startsWith('/departments')
-                    ? 'bg-surface-strong text-ink font-semibold'
-                    : 'text-body hover:text-ink hover:bg-surface-soft'
-                }`}
-              >
-                Departments
-              </Link>
+
+              {/* DOCTOR Navigation */}
+              {user.role === 'DOCTOR' && (
+                <>
+                  <Link
+                    href="/doctor/dashboard"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname === '/doctor/dashboard'
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Clinical Dashboard
+                  </Link>
+                  <Link
+                    href="/appointments"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname === '/appointments'
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Consultations Queue
+                  </Link>
+                  <Link
+                    href="/medical-records"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname.startsWith('/medical-records')
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Patient EHR & Reports
+                  </Link>
+                  <Link
+                    href="/patients"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname.startsWith('/patients')
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Patients Directory
+                  </Link>
+                </>
+              )}
+
+              {/* RECEPTIONIST Navigation */}
+              {user.role === 'RECEPTIONIST' && (
+                <>
+                  <Link
+                    href="/receptionist/dashboard"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname === '/receptionist/dashboard'
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Front Desk
+                  </Link>
+                  <Link
+                    href="/appointments/book"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname.startsWith('/appointments/book')
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Book Walk-In
+                  </Link>
+                  <Link
+                    href="/appointments"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname === '/appointments'
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Appointments
+                  </Link>
+                  <Link
+                    href="/patients"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname.startsWith('/patients')
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Patients
+                  </Link>
+                  <Link
+                    href="/doctors"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname.startsWith('/doctors')
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Doctors Directory
+                  </Link>
+                </>
+              )}
+
+              {/* ADMIN Navigation */}
               {user.role === 'ADMIN' && (
-                <Link
-                  href="/admin/audit"
-                  className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
-                    pathname.startsWith('/admin/audit')
-                      ? 'bg-surface-strong text-ink font-semibold'
-                      : 'text-body hover:text-ink hover:bg-surface-soft'
-                  }`}
-                >
-                  Audit Logs
-                </Link>
+                <>
+                  <Link
+                    href="/admin/dashboard"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname === '/admin/dashboard'
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Admin Dashboard
+                  </Link>
+                  <Link
+                    href="/appointments"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname === '/appointments'
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Appointments
+                  </Link>
+                  <Link
+                    href="/patients"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname.startsWith('/patients')
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Patients
+                  </Link>
+                  <Link
+                    href="/doctors"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname.startsWith('/doctors')
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Doctors
+                  </Link>
+                  <Link
+                    href="/departments"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname.startsWith('/departments')
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Departments
+                  </Link>
+                  <Link
+                    href="/admin/audit"
+                    className={`px-3.5 py-1.5 rounded-pill text-sm font-medium transition ${
+                      pathname.startsWith('/admin/audit')
+                        ? 'bg-surface-strong text-ink font-semibold'
+                        : 'text-body hover:text-ink hover:bg-surface-soft'
+                    }`}
+                  >
+                    Audit Logs
+                  </Link>
+                </>
               )}
             </nav>
           )}

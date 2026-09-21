@@ -18,6 +18,8 @@ import { logAudit } from '@/lib/auth/audit';
 import { ActionResponse, DoctorDailyAvailability, SlotInfo } from '@/types';
 import { AppointmentStatus, Prisma, Role } from '@prisma/client';
 import { toPlainObject } from '@/lib/utils';
+import { appointmentQueue } from '@/lib/queue/appointment-queue';
+import { AppointmentModel } from '@/lib/domain/models';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -197,57 +199,73 @@ export async function bookAppointmentAction(
     const [year, month, day] = appointmentDate.split('-').map(Number);
     const appointmentDateObj = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
 
-    // Concurrency-safe atomic booking transaction
-    const appointment = await prisma.$transaction(async (tx) => {
-      // 1. Check if doctor exists
-      const doctor = await tx.doctor.findUnique({
-        where: { id: doctorId },
-        include: { user: true },
-      });
-      if (!doctor) {
-        throw new Error('Selected doctor does not exist.');
-      }
-
-      // 2. Check for active appointment on the exact slot (Pessimistic conflict check)
-      const existing = await tx.appointment.findFirst({
-        where: {
-          doctorId,
-          appointmentDate: appointmentDateObj,
-          timeSlot,
-          status: {
-            not: AppointmentStatus.CANCELLED,
-          },
-        },
-      });
-
-      if (existing) {
-        throw new Error(`Time slot ${formatTime12h(timeSlot)} is already reserved. Please choose another time.`);
-      }
-
-      // 3. Create appointment
-      const created = await tx.appointment.create({
-        data: {
-          patientId,
-          doctorId,
-          appointmentDate: appointmentDateObj,
-          timeSlot,
-          status: AppointmentStatus.CONFIRMED,
-          reason: reason?.trim() || null,
-        },
-        include: {
-          patient: {
+    // Concurrency-safe atomic booking transaction executed via FIFO request queue
+    const appointment = await appointmentQueue.enqueueTask(
+      `${doctorId}_${appointmentDate}_${timeSlot}`,
+      async () => {
+        return await prisma.$transaction(async (tx) => {
+          // 1. Check if doctor exists
+          const doctor = await tx.doctor.findUnique({
+            where: { id: doctorId },
             include: { user: true },
-          },
-          doctor: {
-            include: {
-              user: true,
-              department: true,
-            },
-          },
-        },
-      });
+          });
+          if (!doctor) {
+            throw new Error('Selected doctor does not exist.');
+          }
 
-      return created;
+          // 2. Check for active appointment on the exact slot (Pessimistic conflict check)
+          const existing = await tx.appointment.findFirst({
+            where: {
+              doctorId,
+              appointmentDate: appointmentDateObj,
+              timeSlot,
+              status: {
+                not: AppointmentStatus.CANCELLED,
+              },
+            },
+          });
+
+          if (existing) {
+            throw new Error(`Time slot ${formatTime12h(timeSlot)} is already reserved. Please choose another time.`);
+          }
+
+          // 3. Create appointment
+          const created = await tx.appointment.create({
+            data: {
+              patientId,
+              doctorId,
+              appointmentDate: appointmentDateObj,
+              timeSlot,
+              status: AppointmentStatus.CONFIRMED,
+              reason: reason?.trim() || null,
+            },
+            include: {
+              patient: {
+                include: { user: true },
+              },
+              doctor: {
+                include: {
+                  user: true,
+                  department: true,
+                },
+              },
+            },
+          });
+
+          return created;
+        });
+      }
+    );
+
+    // Instantiate OOP Domain Model for object-oriented encapsulation
+    const domainModel = new AppointmentModel({
+      id: appointment.id,
+      patientId: appointment.patientId,
+      doctorId: appointment.doctorId,
+      appointmentDate: appointment.appointmentDate,
+      timeSlot: appointment.timeSlot,
+      status: appointment.status,
+      reason: appointment.reason,
     });
 
     await logAudit({
@@ -259,7 +277,11 @@ export async function bookAppointmentAction(
     return {
       success: true,
       message: 'Appointment booked successfully!',
-      data: toPlainObject(appointment),
+      data: {
+        ...toPlainObject(appointment),
+        formattedTime: domainModel.getFormattedTime(),
+        isCancellable: domainModel.isCancellable(),
+      },
     };
   } catch (error: any) {
     console.error('Error in bookAppointmentAction:', error);
@@ -579,5 +601,66 @@ export async function getAppointmentByIdAction(id: string): Promise<ActionRespon
   } catch (error: any) {
     console.error('Error in getAppointmentByIdAction:', error);
     return { success: false, message: error.message || 'Failed to load appointment details.' };
+  }
+}
+
+export async function updateAppointmentStatusAction(
+  appointmentId: string,
+  newStatus: AppointmentStatus
+): Promise<ActionResponse<any>> {
+  try {
+    const currentUser = await requireRole([Role.DOCTOR, Role.ADMIN, Role.RECEPTIONIST]);
+
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: {
+        patient: { include: { user: true } },
+        doctor: { include: { user: true } },
+      },
+    });
+
+    if (!appointment) {
+      return { success: false, message: 'Appointment not found.' };
+    }
+
+    if (currentUser.role === Role.DOCTOR && currentUser.doctorId !== appointment.doctorId) {
+      return { success: false, message: "Unauthorized to modify another doctor's appointment." };
+    }
+
+    const updated = await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: { status: newStatus },
+      include: {
+        patient: { include: { user: true } },
+        doctor: { include: { user: true, department: true } },
+      },
+    });
+
+    await logAudit({
+      userId: currentUser.id,
+      action: 'APPOINTMENT_STATUS_UPDATED',
+      details: `Appointment ID ${appointmentId} status changed to ${newStatus} by ${currentUser.name}`,
+    });
+
+    return {
+      success: true,
+      message: `Appointment marked as ${newStatus}.`,
+      data: toPlainObject(updated),
+    };
+  } catch (error: any) {
+    console.error('Error in updateAppointmentStatusAction:', error);
+    return { success: false, message: error.message || 'Failed to update appointment status.' };
+  }
+}
+
+export async function getAppointmentQueueMetricsAction(): Promise<ActionResponse<any>> {
+  try {
+    await requireAuth();
+    return {
+      success: true,
+      data: appointmentQueue.getStats(),
+    };
+  } catch (error: any) {
+    return { success: false, message: 'Failed to read queue stats.' };
   }
 }

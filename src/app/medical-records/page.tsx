@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -31,7 +31,7 @@ import { getPatientsAction } from '@/actions/patient';
 import { getAuthUserAction } from '@/actions/auth';
 import { SessionUser } from '@/types';
 
-export default function MedicalRecordsPage() {
+function MedicalRecordsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryPatientId = searchParams.get('patientId');
@@ -575,5 +575,19 @@ export default function MedicalRecordsPage() {
         </Modal>
       )}
     </DashboardShell>
+  );
+}
+
+export default function MedicalRecordsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-white text-body text-sm">
+          Loading electronic health records...
+        </div>
+      }
+    >
+      <MedicalRecordsContent />
+    </Suspense>
   );
 }

@@ -1,20 +1,64 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { HeartPulse, Lock, Mail, ArrowRight, Shield, AlertCircle, CheckCircle2, User } from 'lucide-react';
+import {
+  HeartPulse,
+  Lock,
+  Mail,
+  ArrowRight,
+  Shield,
+  AlertCircle,
+  Stethoscope,
+  User,
+  Users,
+} from 'lucide-react';
 import { loginAction } from '@/actions/auth';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl');
+  const roleParam = searchParams.get('role');
+
+  const [portalMode, setPortalMode] = useState<'PATIENT' | 'DOCTOR' | 'STAFF'>(() => {
+    if (roleParam?.toUpperCase() === 'DOCTOR') return 'DOCTOR';
+    if (roleParam?.toUpperCase() === 'ADMIN' || roleParam?.toUpperCase() === 'RECEPTIONIST') return 'STAFF';
+    return 'PATIENT';
+  });
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (roleParam?.toUpperCase() === 'DOCTOR') {
+      setPortalMode('DOCTOR');
+      setEmail('dr.chen@hospital.com');
+      setPassword('Doctor@12345');
+    } else if (roleParam?.toUpperCase() === 'PATIENT') {
+      setPortalMode('PATIENT');
+      setEmail('patient.john@example.com');
+      setPassword('Patient@12345');
+    }
+  }, [roleParam]);
+
+  const handleModeSwitch = (mode: 'PATIENT' | 'DOCTOR' | 'STAFF') => {
+    setPortalMode(mode);
+    setError(null);
+    if (mode === 'PATIENT') {
+      setEmail('patient.john@example.com');
+      setPassword('Patient@12345');
+    } else if (mode === 'DOCTOR') {
+      setEmail('dr.chen@hospital.com');
+      setPassword('Doctor@12345');
+    } else {
+      setEmail('admin@hospital.com');
+      setPassword('Admin@12345');
+    }
+  };
 
   const handleDemoFill = (demoEmail: string, demoPass: string) => {
     setEmail(demoEmail);
@@ -47,15 +91,55 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-md bg-white rounded-xl border border-hairline p-8 shadow-soft">
+      {/* Portal Mode Switcher Tabs */}
+      <div className="flex items-center gap-1 p-1 bg-surface-soft rounded-xl border border-hairline mb-6">
+        <button
+          type="button"
+          onClick={() => handleModeSwitch('PATIENT')}
+          className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 ${
+            portalMode === 'PATIENT'
+              ? 'bg-brand text-white shadow-sm'
+              : 'text-body hover:text-ink'
+          }`}
+        >
+          <User className="h-3.5 w-3.5" /> Patient
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleModeSwitch('DOCTOR')}
+          className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 ${
+            portalMode === 'DOCTOR'
+              ? 'bg-sky-700 text-white shadow-sm'
+              : 'text-body hover:text-ink'
+          }`}
+        >
+          <Stethoscope className="h-3.5 w-3.5" /> Doctor
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleModeSwitch('STAFF')}
+          className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 ${
+            portalMode === 'STAFF'
+              ? 'bg-surface-dark text-white shadow-sm'
+              : 'text-body hover:text-ink'
+          }`}
+        >
+          <Shield className="h-3.5 w-3.5" /> Staff / Admin
+        </button>
+      </div>
+
       <div className="mb-6">
-        <div className="inline-flex items-center gap-1.5 bg-surface-strong text-ink text-xs font-semibold uppercase tracking-wider rounded-pill px-3 py-1 mb-3">
-          <Shield className="h-3.5 w-3.5 text-brand" /> Secure Portal Access
-        </div>
         <h1 className="text-2xl font-normal tracking-tight text-ink">
-          Sign In to HospitalCare
+          {portalMode === 'PATIENT' && 'Patient Portal Sign In'}
+          {portalMode === 'DOCTOR' && 'Doctor Clinical Sign In'}
+          {portalMode === 'STAFF' && 'Administrative Staff Sign In'}
         </h1>
         <p className="text-sm text-body mt-1">
-          Enter your authorized staff or patient credentials.
+          {portalMode === 'PATIENT' && 'Sign in to access appointments, prescriptions, and EHR timeline.'}
+          {portalMode === 'DOCTOR' && 'Sign in to manage shifts, consultation queues, and clinical notes.'}
+          {portalMode === 'STAFF' && 'Authorized credentials for receptionists and system administrators.'}
         </p>
       </div>
 
@@ -106,50 +190,62 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="btn-primary w-full !h-12 !text-base mt-2"
+          className={`w-full !h-12 !text-base mt-2 font-semibold rounded-pill transition text-white ${
+            portalMode === 'DOCTOR'
+              ? 'bg-sky-700 hover:bg-sky-800'
+              : portalMode === 'STAFF'
+              ? 'bg-surface-dark hover:bg-surface-dark-elevated'
+              : 'bg-brand hover:bg-brand-active'
+          }`}
         >
-          {loading ? 'Authenticating...' : 'Sign In'}
+          {loading
+            ? 'Authenticating...'
+            : portalMode === 'PATIENT'
+            ? 'Enter Patient Dashboard'
+            : portalMode === 'DOCTOR'
+            ? 'Enter Clinical Dashboard'
+            : 'Sign In to Portal'}
         </button>
       </form>
 
       {/* 1-Click Fast Demo Credentials Pill Strip */}
       <div className="mt-8 pt-6 border-t border-hairline">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted mb-3 text-center">
-          Quick 1-Click Demo Logins
+          1-Click Quick Demo Accounts
         </div>
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => handleDemoFill('admin@hospital.com', 'Admin@12345')}
-            className="p-2.5 rounded-xl border border-hairline bg-surface-soft hover:bg-surface-strong text-left transition flex items-center gap-2 group"
+            onClick={() => {
+              handleModeSwitch('PATIENT');
+              handleDemoFill('patient.john@example.com', 'Patient@12345');
+            }}
+            className={`p-2.5 rounded-xl border text-left transition flex items-center gap-2 group ${
+              portalMode === 'PATIENT'
+                ? 'border-brand/50 bg-brand/5'
+                : 'border-hairline bg-surface-soft hover:bg-surface-strong'
+            }`}
           >
             <div className="h-6 w-6 rounded-full bg-brand/10 text-brand flex items-center justify-center text-xs font-bold">
-              A
+              P
             </div>
             <div className="overflow-hidden">
-              <div className="text-xs font-semibold text-ink leading-tight">Admin</div>
-              <div className="text-[10px] text-muted truncate">Full Privileges</div>
+              <div className="text-xs font-semibold text-ink leading-tight">Patient John</div>
+              <div className="text-[10px] text-muted truncate">Self-Service</div>
             </div>
           </button>
 
           <button
             type="button"
-            onClick={() => handleDemoFill('reception@hospital.com', 'Staff@12345')}
-            className="p-2.5 rounded-xl border border-hairline bg-surface-soft hover:bg-surface-strong text-left transition flex items-center gap-2 group"
-          >
-            <div className="h-6 w-6 rounded-full bg-emerald-100 text-semantic-up flex items-center justify-center text-xs font-bold">
-              R
-            </div>
-            <div className="overflow-hidden">
-              <div className="text-xs font-semibold text-ink leading-tight">Receptionist</div>
-              <div className="text-[10px] text-muted truncate">Desk & Patients</div>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleDemoFill('dr.chen@hospital.com', 'Doctor@12345')}
-            className="p-2.5 rounded-xl border border-hairline bg-surface-soft hover:bg-surface-strong text-left transition flex items-center gap-2 group"
+            onClick={() => {
+              handleModeSwitch('DOCTOR');
+              handleDemoFill('dr.chen@hospital.com', 'Doctor@12345');
+            }}
+            className={`p-2.5 rounded-xl border text-left transition flex items-center gap-2 group ${
+              portalMode === 'DOCTOR'
+                ? 'border-sky-500/50 bg-sky-50'
+                : 'border-hairline bg-surface-soft hover:bg-surface-strong'
+            }`}
           >
             <div className="h-6 w-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-bold">
               D
@@ -162,15 +258,35 @@ function LoginForm() {
 
           <button
             type="button"
-            onClick={() => handleDemoFill('patient.john@example.com', 'Patient@12345')}
+            onClick={() => {
+              handleModeSwitch('STAFF');
+              handleDemoFill('reception@hospital.com', 'Staff@12345');
+            }}
             className="p-2.5 rounded-xl border border-hairline bg-surface-soft hover:bg-surface-strong text-left transition flex items-center gap-2 group"
           >
-            <div className="h-6 w-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">
-              P
+            <div className="h-6 w-6 rounded-full bg-emerald-100 text-semantic-up flex items-center justify-center text-xs font-bold">
+              R
             </div>
             <div className="overflow-hidden">
-              <div className="text-xs font-semibold text-ink leading-tight">Patient John</div>
-              <div className="text-[10px] text-muted truncate">Demographics</div>
+              <div className="text-xs font-semibold text-ink leading-tight">Receptionist</div>
+              <div className="text-[10px] text-muted truncate">Desk Walk-in</div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              handleModeSwitch('STAFF');
+              handleDemoFill('admin@hospital.com', 'Admin@12345');
+            }}
+            className="p-2.5 rounded-xl border border-hairline bg-surface-soft hover:bg-surface-strong text-left transition flex items-center gap-2 group"
+          >
+            <div className="h-6 w-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold">
+              A
+            </div>
+            <div className="overflow-hidden">
+              <div className="text-xs font-semibold text-ink leading-tight">Administrator</div>
+              <div className="text-[10px] text-muted truncate">Full System</div>
             </div>
           </button>
         </div>
@@ -198,7 +314,7 @@ export default function LoginPage() {
       </header>
 
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-12">
-        <Suspense fallback={<div className="text-muted text-sm">Loading login form...</div>}>
+        <Suspense fallback={<div className="text-muted text-sm">Loading login portal...</div>}>
           <LoginForm />
         </Suspense>
       </div>

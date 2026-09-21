@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -25,7 +25,7 @@ import { getAvailableSlotsAction, bookAppointmentAction } from '@/actions/appoin
 import { getAuthUserAction } from '@/actions/auth';
 import { SessionUser, SlotInfo, DoctorDailyAvailability } from '@/types';
 
-export default function BookAppointmentPage() {
+function BookAppointmentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedDoctorId = searchParams.get('doctorId');
@@ -612,5 +612,19 @@ export default function BookAppointmentPage() {
         )}
       </div>
     </DashboardShell>
+  );
+}
+
+export default function BookAppointmentPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-white text-body text-sm">
+          Loading appointment booking portal...
+        </div>
+      }
+    >
+      <BookAppointmentContent />
+    </Suspense>
   );
 }
