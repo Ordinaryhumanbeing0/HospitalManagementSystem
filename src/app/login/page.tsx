@@ -36,11 +36,11 @@ function LoginForm() {
   useEffect(() => {
     if (roleParam?.toUpperCase() === 'DOCTOR') {
       setPortalMode('DOCTOR');
-      setEmail('dr.chen@hospital.com');
+      setEmail('dr.malhotra@hospital.com');
       setPassword('Doctor@12345');
     } else if (roleParam?.toUpperCase() === 'PATIENT') {
       setPortalMode('PATIENT');
-      setEmail('patient.john@example.com');
+      setEmail('patient.aarav@example.com');
       setPassword('Patient@12345');
     }
   }, [roleParam]);
@@ -49,10 +49,10 @@ function LoginForm() {
     setPortalMode(mode);
     setError(null);
     if (mode === 'PATIENT') {
-      setEmail('patient.john@example.com');
+      setEmail('patient.aarav@example.com');
       setPassword('Patient@12345');
     } else if (mode === 'DOCTOR') {
-      setEmail('dr.chen@hospital.com');
+      setEmail('dr.malhotra@hospital.com');
       setPassword('Doctor@12345');
     } else {
       setEmail('admin@hospital.com');
@@ -218,7 +218,7 @@ function LoginForm() {
             type="button"
             onClick={() => {
               handleModeSwitch('PATIENT');
-              handleDemoFill('patient.john@example.com', 'Patient@12345');
+              handleDemoFill('patient.aarav@example.com', 'Patient@12345');
             }}
             className={`p-2.5 rounded-xl border text-left transition flex items-center gap-2 group ${
               portalMode === 'PATIENT'
@@ -230,7 +230,7 @@ function LoginForm() {
               P
             </div>
             <div className="overflow-hidden">
-              <div className="text-xs font-semibold text-ink leading-tight">Patient John</div>
+              <div className="text-xs font-semibold text-ink leading-tight">Aarav Mehta</div>
               <div className="text-[10px] text-muted truncate">Self-Service</div>
             </div>
           </button>
@@ -239,7 +239,7 @@ function LoginForm() {
             type="button"
             onClick={() => {
               handleModeSwitch('DOCTOR');
-              handleDemoFill('dr.chen@hospital.com', 'Doctor@12345');
+              handleDemoFill('dr.malhotra@hospital.com', 'Doctor@12345');
             }}
             className={`p-2.5 rounded-xl border text-left transition flex items-center gap-2 group ${
               portalMode === 'DOCTOR'
@@ -251,7 +251,7 @@ function LoginForm() {
               D
             </div>
             <div className="overflow-hidden">
-              <div className="text-xs font-semibold text-ink leading-tight">Dr. Chen</div>
+              <div className="text-xs font-semibold text-ink leading-tight">Dr. Malhotra</div>
               <div className="text-[10px] text-muted truncate">Cardiologist</div>
             </div>
           </button>

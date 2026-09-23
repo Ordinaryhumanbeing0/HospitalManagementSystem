@@ -125,13 +125,13 @@ export default function HomePage() {
                   <span className="text-semantic-up font-semibold number-mono">Verified ID</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-white">Johnathan Doe</span>
+                  <span className="text-sm font-semibold text-white">Aarav Mehta</span>
                   <span className="px-2.5 py-0.5 rounded-pill bg-red-950 text-semantic-down font-bold text-xs number-mono border border-red-900/60">
                     O+ POSITIVE
                   </span>
                 </div>
                 <div className="text-xs text-muted-soft">
-                  742 Evergreen Terrace • Emergency Contact Verified
+                  Flat 402, Bandra West, Mumbai • Emergency Contact Verified
                 </div>
               </div>
 
@@ -139,10 +139,10 @@ export default function HomePage() {
               <div className="p-4 rounded-xl bg-surface-dark border border-white/5 space-y-3">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-soft uppercase font-semibold">Specialist on Duty</span>
-                  <span className="text-white number-mono font-semibold">$150.00 / visit</span>
+                  <span className="text-white number-mono font-semibold">₹1,200.00 / visit</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-white">Dr. Robert Chen</span>
+                  <span className="text-sm font-semibold text-white">Dr. Vikram Malhotra</span>
                   <span className="badge-pill !bg-white/10 !text-white text-[10px]">
                     Cardiology
                   </span>

@@ -15,7 +15,9 @@ export const createPrescriptionSchema = z.object({
   patientId: z.string().min(1, 'Patient ID is required.'),
   doctorId: z.string().min(1, 'Doctor ID is required.'),
   diagnosis: z.string().min(2, 'Diagnosis must be at least 2 characters long.'),
+  symptoms: z.string().max(1000).optional().nullable(),
   notes: z.string().max(2000, 'Clinical notes cannot exceed 2000 characters.').optional().nullable(),
+  followUpDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)').optional().nullable(),
   medications: z.array(medicationItemSchema).min(1, 'At least one medication is required in the prescription.'),
 });
 

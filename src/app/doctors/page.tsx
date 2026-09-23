@@ -23,6 +23,7 @@ import { Modal } from '@/components/ui/Modal';
 import { getDoctorsAction, createDoctorAction, deleteDoctorAction } from '@/actions/doctor';
 import { getDepartmentsAction } from '@/actions/department';
 import { getAuthUserAction } from '@/actions/auth';
+import { formatCurrency } from '@/lib/config/currency';
 import { SessionUser } from '@/types';
 
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -54,7 +55,7 @@ export default function DoctorsPage() {
     departmentId: '',
     specialization: '',
     qualification: '',
-    consultationFee: 120,
+    consultationFee: 1000,
     schedules: [
       { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', slotDuration: 30, isActive: true },
       { dayOfWeek: 3, startTime: '09:00', endTime: '17:00', slotDuration: 30, isActive: true },
@@ -261,7 +262,7 @@ export default function DoctorsPage() {
                       Consultation Fee
                     </div>
                     <div className="text-base font-bold text-ink number-mono">
-                      ${Number(doc.consultationFee).toFixed(2)}
+                      {formatCurrency(doc.consultationFee)}
                     </div>
                   </div>
                   <div className="text-right">
@@ -319,7 +320,7 @@ export default function DoctorsPage() {
               <div>
                 <div className="text-xs font-semibold uppercase text-muted">Consultation Fee</div>
                 <div className="text-base font-bold text-ink number-mono mt-0.5">
-                  ${Number(selectedDoctor.consultationFee).toFixed(2)}
+                  {formatCurrency(selectedDoctor.consultationFee)}
                 </div>
               </div>
               <div>
@@ -467,11 +468,11 @@ export default function DoctorsPage() {
 
             <div>
               <label className="block text-xs font-semibold uppercase text-body mb-1">
-                Consultation Fee ($) *
+                Consultation Fee (₹) *
               </label>
               <input
                 type="number"
-                step="0.01"
+                step="1"
                 required
                 value={newDoctor.consultationFee}
                 onChange={(e) => setNewDoctor({ ...newDoctor, consultationFee: parseFloat(e.target.value) })}

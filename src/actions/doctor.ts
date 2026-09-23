@@ -7,15 +7,18 @@ import {
   updateDoctorSchema,
   doctorSearchSchema,
   doctorScheduleItemSchema,
+  doctorLeaveSchema,
   CreateDoctorInput,
   UpdateDoctorInput,
   DoctorSearchInput,
   DoctorScheduleItemInput,
+  DoctorLeaveInput,
 } from '@/lib/validations/doctor';
 import { requireRole, requireAuth } from '@/lib/auth/rbac';
 import { logAudit } from '@/lib/auth/audit';
+import { createNotificationHelper } from '@/actions/notification';
 import { ActionResponse } from '@/types';
-import { Prisma, Role } from '@prisma/client';
+import { AppointmentStatus, Prisma, Role } from '@prisma/client';
 import { z } from 'zod';
 import { toPlainObject } from '@/lib/utils';
 
@@ -199,6 +202,9 @@ export async function createDoctorAction(input: CreateDoctorInput): Promise<Acti
       });
 
       return newDoctor;
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     await logAudit({
@@ -271,6 +277,9 @@ export async function updateDoctorAction(input: UpdateDoctorInput): Promise<Acti
           department: true,
         },
       });
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     await logAudit({
@@ -326,11 +335,16 @@ export async function updateDoctorScheduleAction(
             dayOfWeek: s.dayOfWeek,
             startTime: s.startTime,
             endTime: s.endTime,
+            breakStartTime: s.breakStartTime || null,
+            breakEndTime: s.breakEndTime || null,
             slotDuration: s.slotDuration,
             isActive: s.isActive,
           })),
         });
       }
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     await logAudit({
@@ -343,6 +357,203 @@ export async function updateDoctorScheduleAction(
   } catch (error: any) {
     console.error('Error in updateDoctorScheduleAction:', error);
     return { success: false, message: error.message || 'Failed to update schedule.' };
+  }
+}
+
+export async function toggleDoctorActiveAction(id: string): Promise<ActionResponse<any>> {
+  try {
+    const currentUser = await requireRole([Role.ADMIN]);
+
+    const doctor = await prisma.doctor.findUnique({
+      where: { id },
+      include: { user: true },
+    });
+
+    if (!doctor) {
+      return { success: false, message: 'Doctor not found.' };
+    }
+
+    const nextState = !doctor.isActive;
+
+    await prisma.$transaction([
+      prisma.doctor.update({
+        where: { id },
+        data: { isActive: nextState },
+      }),
+      prisma.user.update({
+        where: { id: doctor.userId },
+        data: { isActive: nextState },
+      }),
+    ]);
+
+    await logAudit({
+      userId: currentUser.id,
+      action: nextState ? 'DOCTOR_ACTIVATED' : 'DOCTOR_DEACTIVATED',
+      details: `Doctor ${doctor.user.name} was ${nextState ? 'reactivated' : 'deactivated'} by Admin ${currentUser.name}`,
+    });
+
+    return {
+      success: true,
+      message: `Doctor ${doctor.user.name} is now ${nextState ? 'Active' : 'Inactive'}.`,
+      data: { isActive: nextState },
+    };
+  } catch (error: any) {
+    console.error('Error in toggleDoctorActiveAction:', error);
+    return { success: false, message: error.message || 'Failed to toggle doctor status.' };
+  }
+}
+
+export async function addDoctorLeaveAction(input: DoctorLeaveInput): Promise<ActionResponse<any>> {
+  try {
+    const currentUser = await requireAuth();
+
+    const validated = doctorLeaveSchema.safeParse(input);
+    if (!validated.success) {
+      return {
+        success: false,
+        message: 'Invalid leave dates or reason.',
+        errors: validated.error.flatten().fieldErrors,
+      };
+    }
+
+    const { doctorId, startDate, endDate, reason } = validated.data;
+
+    const doctor = await prisma.doctor.findUnique({
+      where: { id: doctorId },
+      include: { user: true },
+    });
+
+    if (!doctor) {
+      return { success: false, message: 'Doctor not found.' };
+    }
+
+    if (currentUser.role !== Role.ADMIN && currentUser.doctorId !== doctor.id) {
+      return { success: false, message: 'Unauthorized to schedule leave for another physician.' };
+    }
+
+    if (startDate > endDate) {
+      return { success: false, message: 'Leave start date cannot be after end date.' };
+    }
+
+    const [sY, sM, sD] = startDate.split('-').map(Number);
+    const [eY, eM, eD] = endDate.split('-').map(Number);
+    const startObj = new Date(Date.UTC(sY, sM - 1, sD, 0, 0, 0));
+    const endObj = new Date(Date.UTC(eY, eM - 1, eD, 23, 59, 59));
+
+    // Create Leave
+    const leave = await prisma.doctorLeave.create({
+      data: {
+        doctorId,
+        startDate: startObj,
+        endDate: endObj,
+        reason: reason?.trim() || 'Unavailable / Personal Leave',
+      },
+      include: { doctor: { include: { user: true } } },
+    });
+
+    // Check for conflicting appointments
+    const conflictingAppts = await prisma.appointment.findMany({
+      where: {
+        doctorId,
+        appointmentDate: {
+          gte: startObj,
+          lte: endObj,
+        },
+        status: { in: [AppointmentStatus.CONFIRMED, AppointmentStatus.SCHEDULED] },
+      },
+      include: {
+        patient: { include: { user: true } },
+      },
+    });
+
+    await logAudit({
+      userId: currentUser.id,
+      action: 'DOCTOR_LEAVE_SCHEDULED',
+      details: `Leave from ${startDate} to ${endDate} scheduled for Dr. ${doctor.user.name}. ${conflictingAppts.length} appointments flagged for rescheduling.`,
+    });
+
+    // Notify affected patients and admin
+    for (const appt of conflictingAppts) {
+      await createNotificationHelper({
+        userId: appt.patient.userId,
+        title: 'Doctor Unavailable - Rescheduling Needed',
+        message: `Dr. ${doctor.user.name} is on leave on ${appt.appointmentDate.toISOString().split('T')[0]}. Please reschedule your appointment or contact reception.`,
+      });
+    }
+
+    return {
+      success: true,
+      message: `Leave recorded successfully. ${conflictingAppts.length} existing appointment(s) flagged.`,
+      data: {
+        ...toPlainObject(leave),
+        conflictedCount: conflictingAppts.length,
+      },
+    };
+  } catch (error: any) {
+    console.error('Error in addDoctorLeaveAction:', error);
+    return { success: false, message: error.message || 'Failed to schedule doctor leave.' };
+  }
+}
+
+export async function getDoctorLeavesAction(doctorId?: string): Promise<ActionResponse<any[]>> {
+  try {
+    await requireAuth();
+
+    const where: Prisma.DoctorLeaveWhereInput = {};
+    if (doctorId && doctorId !== 'ALL') {
+      where.doctorId = doctorId;
+    }
+
+    const leaves = await prisma.doctorLeave.findMany({
+      where,
+      orderBy: { startDate: 'desc' },
+      include: {
+        doctor: {
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+            department: { select: { id: true, name: true } },
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      data: toPlainObject(leaves),
+    };
+  } catch (error: any) {
+    return { success: false, message: 'Failed to fetch doctor leaves.' };
+  }
+}
+
+export async function deleteDoctorLeaveAction(leaveId: string): Promise<ActionResponse<void>> {
+  try {
+    const currentUser = await requireAuth();
+
+    const leave = await prisma.doctorLeave.findUnique({
+      where: { id: leaveId },
+      include: { doctor: { include: { user: true } } },
+    });
+
+    if (!leave) {
+      return { success: false, message: 'Leave record not found.' };
+    }
+
+    if (currentUser.role !== Role.ADMIN && currentUser.doctorId !== leave.doctorId) {
+      return { success: false, message: 'Unauthorized to delete this leave.' };
+    }
+
+    await prisma.doctorLeave.delete({ where: { id: leaveId } });
+
+    await logAudit({
+      userId: currentUser.id,
+      action: 'DOCTOR_LEAVE_CANCELLED',
+      details: `Leave ID ${leaveId} for Dr. ${leave.doctor.user.name} removed by ${currentUser.name}`,
+    });
+
+    return { success: true, message: 'Leave cancelled successfully.' };
+  } catch (error: any) {
+    return { success: false, message: error.message || 'Failed to remove leave.' };
   }
 }
 

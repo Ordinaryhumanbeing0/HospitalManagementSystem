@@ -1,3 +1,4 @@
+// Comprehensive Database Seeder for Hospital Operations Platform
 import { PrismaClient, Role, AppointmentStatus, PaymentStatus, PaymentMethod } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
@@ -10,10 +11,11 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  console.log('🚀 Starting comprehensive database seed (populating all tables)...');
+  console.log('🚀 Starting comprehensive database seed (Connected Hospital Operations Platform)...');
 
   // 1. Clear existing data in reverse order of foreign key dependencies
   console.log('🧹 Cleaning up old records...');
+  await prisma.systemSetting.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.payment.deleteMany();
@@ -21,21 +23,57 @@ async function main() {
   await prisma.medicalReport.deleteMany();
   await prisma.prescription.deleteMany();
   await prisma.appointment.deleteMany();
+  await prisma.doctorLeave.deleteMany();
   await prisma.doctorSchedule.deleteMany();
   await prisma.patient.deleteMany();
   await prisma.doctor.deleteMany();
   await prisma.department.deleteMany();
   await prisma.user.deleteMany();
 
-  // 2. Hash standard passwords
+  // 2. Seed System Settings (Table: SystemSetting)
+  console.log('⚙️ Seeding System Settings (INR Currency & Healthcare Defaults)...');
+  await prisma.systemSetting.createMany({
+    data: [
+      {
+        key: 'CURRENCY_CODE',
+        value: 'INR',
+        description: 'ISO-4217 Currency Code for Indian Rupee',
+      },
+      {
+        key: 'CURRENCY_SYMBOL',
+        value: '₹',
+        description: 'Unicode Currency Symbol for Indian Rupee',
+      },
+      {
+        key: 'CURRENCY_LOCALE',
+        value: 'en-IN',
+        description: 'Standard Indian number and currency formatting locale',
+      },
+      {
+        key: 'DEFAULT_CONSULTATION_FEE',
+        value: '800',
+        description: 'Baseline outpatient general consultation fee in INR',
+      },
+      {
+        key: 'DEFAULT_MEDICATION_PRICE',
+        value: '250',
+        description: 'Standard pharmacy medication unit price in INR',
+      },
+      {
+        key: 'DEFAULT_LAB_SCAN_PRICE',
+        value: '750',
+        description: 'Baseline diagnostic pathology/scan unit price in INR',
+      },
+    ],
+  });
+
+  // 3. Hash standard passwords
   const adminPasswordHash = await bcrypt.hash('Admin@12345', 10);
   const doctorPasswordHash = await bcrypt.hash('Doctor@12345', 10);
   const staffPasswordHash = await bcrypt.hash('Staff@12345', 10);
   const patientPasswordHash = await bcrypt.hash('Patient@12345', 10);
 
-  // ----------------------------------------------------
-  // 3. Seed Departments (Table: Department)
-  // ----------------------------------------------------
+  // 4. Seed Departments
   console.log('🏢 Seeding Departments...');
   const departmentsData = [
     {
@@ -68,15 +106,13 @@ async function main() {
     createdDepartments[dept.name] = created.id;
   }
 
-  // ----------------------------------------------------
-  // 4. Seed Staff Users (Table: User)
-  // ----------------------------------------------------
+  // 5. Seed Staff Users
   console.log('👤 Seeding Admin & Receptionist Users...');
   const adminUser = await prisma.user.create({
     data: {
       email: 'admin@hospital.com',
-      name: 'Dr. Arthur Vance (Chief Medical Officer)',
-      phone: '+1 (555) 010-0001',
+      name: 'Dr. Rajesh Sharma (Chief Medical Officer)',
+      phone: '+91 98201 00001',
       passwordHash: adminPasswordHash,
       role: Role.ADMIN,
     },
@@ -85,59 +121,66 @@ async function main() {
   const receptionistUser = await prisma.user.create({
     data: {
       email: 'reception@hospital.com',
-      name: 'Sarah Jenkins',
-      phone: '+1 (555) 010-0002',
+      name: 'Priya Sharma (Front Desk Executive)',
+      phone: '+91 98201 00002',
       passwordHash: staffPasswordHash,
       role: Role.RECEPTIONIST,
     },
   });
 
-  // ----------------------------------------------------
-  // 5. Seed Doctors & Schedules (Tables: User, Doctor, DoctorSchedule)
-  // ----------------------------------------------------
-  console.log('👨‍⚕️ Seeding Doctors and Weekly Schedules...');
+  // 6. Seed Doctors & Schedules & Leaves
+  console.log('👨‍⚕️ Seeding Doctors, Schedules with Break Times, and Leaves...');
   const doctorsData = [
     {
-      name: 'Dr. Robert Chen',
-      email: 'dr.chen@hospital.com',
-      phone: '+1 (555) 201-1001',
+      name: 'Dr. Vikram Malhotra',
+      email: 'dr.malhotra@hospital.com',
+      phone: '+91 98201 10001',
       department: 'Cardiology',
       specialization: 'Interventional Cardiology & Electrophysiology',
-      qualification: 'MD (Cardiology), FACC',
-      consultationFee: 150.0,
+      qualification: 'MBBS, MD, DM (Cardiology), FACC',
+      consultationFee: 1200.0,
       schedules: [
-        { dayOfWeek: 1, startTime: '09:00', endTime: '16:00', slotDuration: 30 },
-        { dayOfWeek: 3, startTime: '09:00', endTime: '16:00', slotDuration: 30 },
-        { dayOfWeek: 5, startTime: '09:00', endTime: '13:00', slotDuration: 30 },
+        { dayOfWeek: 0, startTime: '09:00', endTime: '16:00', breakStartTime: '13:00', breakEndTime: '14:00', slotDuration: 30 },
+        { dayOfWeek: 1, startTime: '09:00', endTime: '16:00', breakStartTime: '13:00', breakEndTime: '14:00', slotDuration: 30 },
+        { dayOfWeek: 2, startTime: '09:00', endTime: '16:00', breakStartTime: '13:00', breakEndTime: '14:00', slotDuration: 30 },
+        { dayOfWeek: 3, startTime: '09:00', endTime: '16:00', breakStartTime: '13:00', breakEndTime: '14:00', slotDuration: 30 },
+        { dayOfWeek: 4, startTime: '09:00', endTime: '16:00', breakStartTime: '13:00', breakEndTime: '14:00', slotDuration: 30 },
+        { dayOfWeek: 5, startTime: '09:00', endTime: '14:00', breakStartTime: '12:00', breakEndTime: '12:30', slotDuration: 30 },
+        { dayOfWeek: 6, startTime: '09:00', endTime: '13:00', slotDuration: 30 },
       ],
     },
     {
       name: 'Dr. Aisha Patel',
       email: 'dr.patel@hospital.com',
-      phone: '+1 (555) 201-1002',
+      phone: '+91 98201 10002',
       department: 'Neurology',
       specialization: 'Neurological Disorders & Stroke Care',
-      qualification: 'MD, DM (Neurology)',
-      consultationFee: 160.0,
+      qualification: 'MBBS, MD, DM (Neurology)',
+      consultationFee: 1500.0,
       schedules: [
-        { dayOfWeek: 2, startTime: '10:00', endTime: '17:00', slotDuration: 30 },
-        { dayOfWeek: 4, startTime: '10:00', endTime: '17:00', slotDuration: 30 },
+        { dayOfWeek: 1, startTime: '10:00', endTime: '17:00', breakStartTime: '13:00', breakEndTime: '14:00', slotDuration: 30 },
+        { dayOfWeek: 2, startTime: '10:00', endTime: '17:00', breakStartTime: '13:00', breakEndTime: '14:00', slotDuration: 30 },
+        { dayOfWeek: 3, startTime: '10:00', endTime: '17:00', breakStartTime: '13:00', breakEndTime: '14:00', slotDuration: 30 },
+        { dayOfWeek: 4, startTime: '10:00', endTime: '17:00', breakStartTime: '13:00', breakEndTime: '14:00', slotDuration: 30 },
+        { dayOfWeek: 5, startTime: '10:00', endTime: '15:00', slotDuration: 30 },
       ],
     },
     {
-      name: 'Dr. David Kim',
-      email: 'dr.kim@hospital.com',
-      phone: '+1 (555) 201-1005',
+      name: 'Dr. Suresh Iyer',
+      email: 'dr.iyer@hospital.com',
+      phone: '+91 98201 10003',
       department: 'General Medicine',
       specialization: 'Internal Medicine & Preventative Care',
-      qualification: 'MBBS, MD (Internal Medicine)',
-      consultationFee: 100.0,
+      qualification: 'MBBS, MD (General Medicine)',
+      consultationFee: 800.0,
       schedules: [
-        { dayOfWeek: 1, startTime: '08:00', endTime: '16:00', slotDuration: 30 },
-        { dayOfWeek: 2, startTime: '08:00', endTime: '16:00', slotDuration: 30 },
-        { dayOfWeek: 3, startTime: '08:00', endTime: '16:00', slotDuration: 30 },
-        { dayOfWeek: 4, startTime: '08:00', endTime: '16:00', slotDuration: 30 },
-        { dayOfWeek: 5, startTime: '08:00', endTime: '14:00', slotDuration: 30 },
+        { dayOfWeek: 0, startTime: '08:00', endTime: '16:00', breakStartTime: '12:30', breakEndTime: '13:30', slotDuration: 30 },
+        { dayOfWeek: 1, startTime: '08:00', endTime: '16:00', breakStartTime: '12:30', breakEndTime: '13:30', slotDuration: 30 },
+        { dayOfWeek: 2, startTime: '08:00', endTime: '16:00', breakStartTime: '12:30', breakEndTime: '13:30', slotDuration: 30 },
+        { dayOfWeek: 3, startTime: '08:00', endTime: '16:00', breakStartTime: '12:30', breakEndTime: '13:30', slotDuration: 30 },
+        { dayOfWeek: 4, startTime: '08:00', endTime: '16:00', breakStartTime: '12:30', breakEndTime: '13:30', slotDuration: 30 },
+        { dayOfWeek: 5, startTime: '08:00', endTime: '16:00', breakStartTime: '12:30', breakEndTime: '13:30', slotDuration: 30 },
+        { dayOfWeek: 6, startTime: '08:00', endTime: '13:00', slotDuration: 30 },
       ],
     },
   ];
@@ -161,6 +204,7 @@ async function main() {
         specialization: doc.specialization,
         qualification: doc.qualification,
         consultationFee: doc.consultationFee,
+        isActive: true,
         schedules: {
           create: doc.schedules,
         },
@@ -174,43 +218,67 @@ async function main() {
     createdDoctors.push(doctorRecord);
   }
 
-  // ----------------------------------------------------
-  // 6. Seed Patients (Tables: User, Patient)
-  // ----------------------------------------------------
-  console.log('🧑‍🤝‍🧑 Seeding Patients...');
+  // Seed a Doctor Leave for Dr. Aisha Patel on a date 3 days from now
+  const leaveStart = new Date();
+  leaveStart.setDate(leaveStart.getDate() + 3);
+  const leaveEnd = new Date(leaveStart);
+  leaveEnd.setDate(leaveEnd.getDate() + 2);
+
+  await prisma.doctorLeave.create({
+    data: {
+      doctorId: createdDoctors[1].id, // Dr. Aisha Patel
+      startDate: leaveStart,
+      endDate: leaveEnd,
+      reason: 'Attending National Neurology Conference in Bengaluru',
+    },
+  });
+
+  // 7. Seed Patients
+  console.log('🧑‍🤝‍🧑 Seeding Indian Patients & Demographics...');
   const patientsData = [
     {
-      name: 'Johnathan Doe',
-      email: 'patient.john@example.com',
-      phone: '+1 (555) 301-2001',
+      name: 'Aarav Mehta',
+      email: 'patient.aarav@example.com',
+      phone: '+91 98201 20001',
       dateOfBirth: new Date('1988-04-12'),
       gender: 'Male',
       bloodGroup: 'O+',
-      address: '742 Evergreen Terrace, Springfield, IL 62704',
-      emergencyContact: '+1 (555) 301-9001 (Jane Doe - Spouse)',
-      medicalHistorySummary: 'Hypertension managed on ACE inhibitors. Mild seasonal pollen allergy.',
+      address: 'Flat 402, Shanti Niketan, Bandra West, Mumbai, MH 400050',
+      emergencyContact: '+91 98201 90001 (Sunita Mehta - Spouse)',
+      medicalHistorySummary: 'Hypertension managed on ACE inhibitors. Mild seasonal dust and pollen allergy.',
     },
     {
-      name: 'Maria Elena Rodriguez',
-      email: 'patient.maria@example.com',
-      phone: '+1 (555) 301-2002',
+      name: 'Priyanka Verma',
+      email: 'patient.priyanka@example.com',
+      phone: '+91 98201 20002',
       dateOfBirth: new Date('1994-08-25'),
       gender: 'Female',
       bloodGroup: 'A+',
-      address: '120 Elm Street, Suite 4B, Boston, MA 02115',
-      emergencyContact: '+1 (555) 301-9002 (Carlos Rodriguez - Brother)',
+      address: '12/A, Koramangala 4th Block, Bengaluru, KA 560034',
+      emergencyContact: '+91 98201 90002 (Rahul Verma - Brother)',
       medicalHistorySummary: 'No chronic illnesses. Prior appendectomy in 2018 with no complications.',
     },
     {
-      name: 'Liam Alexander Johnson',
-      email: 'patient.liam@example.com',
-      phone: '+1 (555) 301-2003',
+      name: 'Rohan Kapoor',
+      email: 'patient.rohan@example.com',
+      phone: '+91 98201 20003',
       dateOfBirth: new Date('2002-11-03'),
       gender: 'Male',
       bloodGroup: 'B-',
-      address: '45 Baker Street, Apt 12, New York, NY 10001',
-      emergencyContact: '+1 (555) 301-9003 (Clara Johnson - Mother)',
-      medicalHistorySummary: 'Mild persistent asthma managed with Albuterol PRN. Penicillin allergy.',
+      address: 'B-104, Green Park Extension, New Delhi, DL 110016',
+      emergencyContact: '+91 98201 90003 (Kavita Kapoor - Mother)',
+      medicalHistorySummary: 'Mild persistent asthma managed with Salbutamol inhaler PRN. Penicillin allergy.',
+    },
+    {
+      name: 'Ananya Sharma',
+      email: 'patient.ananya@example.com',
+      phone: '+91 98201 20004',
+      dateOfBirth: new Date('1981-06-18'),
+      gender: 'Female',
+      bloodGroup: 'AB+',
+      address: 'Plot 45, Jubilee Hills, Hyderabad, TS 500033',
+      emergencyContact: '+91 98201 90004 (Deepak Sharma - Husband)',
+      medicalHistorySummary: 'Type 2 Diabetes Mellitus under diet and Metformin control. Regular HbA1c monitoring.',
     },
   ];
 
@@ -244,109 +312,190 @@ async function main() {
     createdPatients.push(patientRecord);
   }
 
-  // ----------------------------------------------------
-  // 7. Seed Appointments (Table: Appointment)
-  // ----------------------------------------------------
-  console.log('📅 Seeding Appointments...');
-  const pastDate = new Date();
-  pastDate.setDate(pastDate.getDate() - 3);
+  // 8. Seed Appointments Across Every Lifecycle State
+  console.log('📅 Seeding Connected Appointments...');
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0));
 
-  const futureDate1 = new Date();
-  futureDate1.setDate(futureDate1.getDate() + 2);
+  const pastDate1 = new Date(today);
+  pastDate1.setDate(pastDate1.getDate() - 3);
 
-  const futureDate2 = new Date();
-  futureDate2.setDate(futureDate2.getDate() + 4);
+  const pastDate2 = new Date(today);
+  pastDate2.setDate(pastDate2.getDate() - 1);
 
-  // Appointment 1: Completed Consultation (John with Dr. Chen)
-  const apptCompleted = await prisma.appointment.create({
+  const futureDate1 = new Date(today);
+  futureDate1.setDate(futureDate1.getDate() + 1);
+
+  // Appt 1: TODAY - CHECKED_IN (Waiting Room) - Aarav Mehta with Dr. Vikram Malhotra
+  const apptCheckedIn = await prisma.appointment.create({
     data: {
       patientId: createdPatients[0].id,
       doctorId: createdDoctors[0].id,
-      appointmentDate: pastDate,
+      appointmentDate: today,
       timeSlot: '10:00',
-      status: AppointmentStatus.COMPLETED,
-      reason: 'Routine cardiovascular follow-up and blood pressure assessment.',
+      status: AppointmentStatus.CHECKED_IN,
+      reason: 'Routine cardiovascular follow-up & resting pulse check.',
     },
   });
 
-  // Appointment 2: Confirmed Upcoming (Maria with Dr. Patel)
-  const apptConfirmed1 = await prisma.appointment.create({
-    data: {
-      patientId: createdPatients[1].id,
-      doctorId: createdDoctors[1].id,
-      appointmentDate: futureDate1,
-      timeSlot: '11:30',
-      status: AppointmentStatus.CONFIRMED,
-      reason: 'Migraine evaluation and chronic headache review.',
-    },
-  });
-
-  // Appointment 3: Confirmed Upcoming (Liam with Dr. Kim)
-  const apptConfirmed2 = await prisma.appointment.create({
+  // Appt 2: TODAY - IN_PROGRESS (Consultation Room) - Rohan Kapoor with Dr. Suresh Iyer
+  const apptInProgress = await prisma.appointment.create({
     data: {
       patientId: createdPatients[2].id,
       doctorId: createdDoctors[2].id,
-      appointmentDate: futureDate2,
-      timeSlot: '09:30',
-      status: AppointmentStatus.CONFIRMED,
-      reason: 'Seasonal asthma assessment and spirometry follow-up.',
+      appointmentDate: today,
+      timeSlot: '11:00',
+      status: AppointmentStatus.IN_PROGRESS,
+      reason: 'Acute seasonal asthma flare-up and spirometry review.',
     },
   });
 
-  // Appointment 4: Cancelled Slot (John with Dr. Kim)
-  const apptCancelled = await prisma.appointment.create({
+  // Appt 3: PAST (3 days ago) - COMPLETED with Prescription & Paid Bill - Aarav with Dr. Vikram
+  const apptCompleted1 = await prisma.appointment.create({
     data: {
       patientId: createdPatients[0].id,
-      doctorId: createdDoctors[2].id,
-      appointmentDate: futureDate1,
-      timeSlot: '14:00',
-      status: AppointmentStatus.CANCELLED,
-      reason: '[Cancelled]: Patient had a work scheduling conflict.',
+      doctorId: createdDoctors[0].id,
+      appointmentDate: pastDate1,
+      timeSlot: '10:00',
+      status: AppointmentStatus.COMPLETED,
+      reason: 'Hypertension evaluation and ECG reading.',
     },
   });
 
-  // ----------------------------------------------------
-  // 8. Seed Prescriptions (Table: Prescription)
-  // ----------------------------------------------------
-  console.log('💊 Seeding Prescriptions...');
-  const prescription1 = await prisma.prescription.create({
+  // Appt 4: PAST (1 day ago) - COMPLETED with Prescription & Unpaid Bill - Priyanka with Dr. Suresh
+  const apptCompleted2 = await prisma.appointment.create({
     data: {
-      appointmentId: apptCompleted.id,
+      patientId: createdPatients[1].id,
+      doctorId: createdDoctors[2].id,
+      appointmentDate: pastDate2,
+      timeSlot: '14:30',
+      status: AppointmentStatus.COMPLETED,
+      reason: 'Mild throat infection, cough, and fever evaluation.',
+    },
+  });
+
+  // Appt 5: FUTURE (Tomorrow) - CONFIRMED Upcoming - Priyanka with Dr. Vikram
+  const apptUpcoming = await prisma.appointment.create({
+    data: {
+      patientId: createdPatients[1].id,
+      doctorId: createdDoctors[0].id,
+      appointmentDate: futureDate1,
+      timeSlot: '11:30',
+      status: AppointmentStatus.CONFIRMED,
+      reason: 'Preventative cardiac wellness screening.',
+    },
+  });
+
+  // Appt 6: CONFLICTED APPOINTMENT (Falls on Dr. Aisha Patel's leave date!)
+  const apptConflicted = await prisma.appointment.create({
+    data: {
+      patientId: createdPatients[2].id,
+      doctorId: createdDoctors[1].id, // Dr. Aisha Patel
+      appointmentDate: leaveStart,
+      timeSlot: '11:00',
+      status: AppointmentStatus.CONFIRMED,
+      reason: 'Chronic migraine and headache reassessment (Scheduled during doctor leave).',
+    },
+  });
+
+  // Appt 7: PAST - CANCELLED
+  await prisma.appointment.create({
+    data: {
+      patientId: createdPatients[3].id,
+      doctorId: createdDoctors[2].id,
+      appointmentDate: pastDate2,
+      timeSlot: '15:00',
+      status: AppointmentStatus.CANCELLED,
+      reason: '[Cancelled by Patient]: Urgent personal travel.',
+    },
+  });
+
+  // Appt 8: PAST - NO_SHOW
+  await prisma.appointment.create({
+    data: {
+      patientId: createdPatients[2].id,
+      doctorId: createdDoctors[0].id,
+      appointmentDate: pastDate1,
+      timeSlot: '14:00',
+      status: AppointmentStatus.NO_SHOW,
+      reason: 'Patient failed to arrive at scheduled slot.',
+    },
+  });
+
+  // 9. Seed Prescriptions tied to Completed Consultations
+  console.log('💊 Seeding Digital Prescriptions with Symptoms & Follow-ups...');
+  const followUp1 = new Date(pastDate1);
+  followUp1.setMonth(followUp1.getMonth() + 3);
+
+  await prisma.prescription.create({
+    data: {
+      appointmentId: apptCompleted1.id,
       patientId: createdPatients[0].id,
       doctorId: createdDoctors[0].id,
       diagnosis: 'Stage 1 Primary Hypertension & Mild Tachycardia',
-      notes: 'Continue low sodium DASH diet. Exercise 30 minutes daily. Follow up in 3 months with a fresh lipid profile.',
+      symptoms: 'Morning headaches, occasional dizziness, resting BP 142/90 mmHg',
+      notes: 'Continue low sodium DASH diet. Exercise 30 minutes daily. Monitor blood pressure twice weekly.',
+      followUpDate: followUp1,
       medications: [
         {
-          name: 'Lisinopril 10mg',
+          name: 'Telmisartan 40mg',
           dosage: '1 Tablet',
-          frequency: 'Once daily every morning',
+          frequency: 'Once daily after breakfast',
           duration: '90 days',
-          instructions: 'Take after breakfast with water.',
+          instructions: 'Take in the morning with plenty of water.',
         },
         {
-          name: 'Metoprolol Tartrate 25mg',
+          name: 'Metoprolol Succinate 25mg',
           dosage: '1 Tablet',
-          frequency: 'Twice daily (morning & night)',
+          frequency: 'Twice daily after meals',
           duration: '30 days',
-          instructions: 'Monitor resting pulse.',
+          instructions: 'Check pulse regularly; do not abruptly stop.',
         },
       ],
     },
   });
 
-  // ----------------------------------------------------
-  // 9. Seed Diagnostic Medical Reports (Table: MedicalReport)
-  // ----------------------------------------------------
-  console.log('🔬 Seeding Medical Reports...');
+  const followUp2 = new Date(pastDate2);
+  followUp2.setDate(followUp2.getDate() + 7);
+
+  await prisma.prescription.create({
+    data: {
+      appointmentId: apptCompleted2.id,
+      patientId: createdPatients[1].id,
+      doctorId: createdDoctors[2].id,
+      diagnosis: 'Acute Upper Respiratory Tract Infection (URTI)',
+      symptoms: 'Sore throat, dry cough, low-grade fever (99.8°F), nasal congestion',
+      notes: 'Salt water gargling 3 times daily. Steam inhalation. Drink warm fluids.',
+      followUpDate: followUp2,
+      medications: [
+        {
+          name: 'Amoxicillin-Clavulanate 625mg',
+          dosage: '1 Tablet',
+          frequency: 'Twice daily after meals',
+          duration: '5 days',
+          instructions: 'Complete full course.',
+        },
+        {
+          name: 'Paracetamol 650mg',
+          dosage: '1 Tablet',
+          frequency: 'SOS for fever or body ache',
+          duration: '3 days',
+          instructions: 'Max 3 tablets in 24 hours.',
+        },
+      ],
+    },
+  });
+
+  // 10. Seed Medical Reports
+  console.log('🔬 Seeding Diagnostic Lab & Imaging Reports...');
   await prisma.medicalReport.create({
     data: {
       patientId: createdPatients[0].id,
       doctorId: createdDoctors[0].id,
       title: 'Complete 12-Lead Electrocardiogram (ECG)',
       reportType: 'ECG / Cardiology',
-      fileUrl: 'https://storage.hospitalcare.org/reports/ecg_scan_john_doe_2026.pdf',
-      notes: 'Normal sinus rhythm at 72 bpm. Normal PR interval and QRS duration. No ST-segment abnormalities noted.',
+      fileUrl: 'https://storage.hospitalcare.org/reports/ecg_scan_aarav_mehta_2026.pdf',
+      notes: 'Normal sinus rhythm at 72 bpm. Normal PR interval and QRS duration. No acute ST changes.',
     },
   });
 
@@ -354,10 +503,10 @@ async function main() {
     data: {
       patientId: createdPatients[0].id,
       doctorId: createdDoctors[0].id,
-      title: 'Lipid & Comprehensive Metabolic Panel (CMP)',
+      title: 'Comprehensive Lipid & Metabolic Profile',
       reportType: 'Blood Test',
-      fileUrl: 'https://storage.hospitalcare.org/reports/blood_panel_john_doe.pdf',
-      notes: 'Total Cholesterol: 185 mg/dL (Desirable), Triglycerides: 140 mg/dL, Fasting Blood Glucose: 92 mg/dL.',
+      fileUrl: 'https://storage.hospitalcare.org/reports/lipid_profile_aarav_mehta.pdf',
+      notes: 'Total Cholesterol: 185 mg/dL, Triglycerides: 140 mg/dL, Fasting Blood Glucose: 92 mg/dL.',
     },
   });
 
@@ -365,10 +514,10 @@ async function main() {
     data: {
       patientId: createdPatients[1].id,
       doctorId: createdDoctors[1].id,
-      title: 'Brain Magnetic Resonance Imaging (MRI without Contrast)',
+      title: 'Brain Magnetic Resonance Imaging (MRI)',
       reportType: 'MRI Scan',
-      fileUrl: 'https://storage.hospitalcare.org/reports/brain_mri_maria_rodriguez.pdf',
-      notes: 'Normal brain parenchyma with no acute infarction, intracranial hemorrhage, or space-occupying lesion.',
+      fileUrl: 'https://storage.hospitalcare.org/reports/brain_mri_priyanka_verma.pdf',
+      notes: 'Normal brain parenchyma with no acute infarction or lesion.',
     },
   });
 
@@ -378,68 +527,80 @@ async function main() {
       doctorId: createdDoctors[2].id,
       title: 'Digital Posteroanterior Chest X-Ray',
       reportType: 'X-Ray',
-      fileUrl: 'https://storage.hospitalcare.org/reports/chest_xray_liam_johnson.pdf',
-      notes: 'Clear bilateral lung fields. Cardiothoracic silhouette within normal physiological limits.',
+      fileUrl: 'https://storage.hospitalcare.org/reports/chest_xray_rohan_kapoor.pdf',
+      notes: 'Clear bilateral lung fields. No focal consolidation or pleural effusion.',
     },
   });
 
-  // ----------------------------------------------------
-  // 10. Seed Bills (Table: Bill)
-  // ----------------------------------------------------
-  console.log('💳 Seeding Bills...');
-  // Bill 1: Paid consultation & ECG bill for John
+  // 11. Seed Bills tied strictly to completed consultations
+  console.log('💳 Seeding Connected Bills & Payments in INR...');
+  // Bill 1: PAID bill for completed appointment 3 (Aarav Mehta - ₹2,000)
   const bill1 = await prisma.bill.create({
     data: {
       patientId: createdPatients[0].id,
-      appointmentId: apptCompleted.id,
-      totalAmount: 225.0,
+      appointmentId: apptCompleted1.id,
+      totalAmount: 2000.0,
       discount: 0.0,
-      paidAmount: 225.0,
+      paidAmount: 2000.0,
       status: PaymentStatus.PAID,
-      items: [
-        { title: 'Specialist Cardiology Consultation (Dr. Chen)', cost: 150.0, quantity: 1 },
-        { title: '12-Lead Diagnostic ECG Examination', cost: 75.0, quantity: 1 },
-      ],
+      items: {
+        items: [
+          { title: 'Specialist Cardiology Consultation - Dr. Vikram Malhotra', category: 'CONSULTATION', cost: 1200.0, quantity: 1, total: 1200.0 },
+          { title: '12-Lead Diagnostic ECG Examination', category: 'LAB_TEST', cost: 800.0, quantity: 1, total: 800.0 },
+        ],
+        subtotal: 2000.0,
+        discount: 0,
+        discountRate: 0,
+        tax: 0,
+        taxRate: 0,
+        total: 2000.0,
+      },
     },
   });
 
-  // Bill 2: Unpaid bill for upcoming visit
-  const bill2 = await prisma.bill.create({
-    data: {
-      patientId: createdPatients[1].id,
-      appointmentId: apptConfirmed1.id,
-      totalAmount: 160.0,
-      discount: 10.0,
-      paidAmount: 0.0,
-      status: PaymentStatus.UNPAID,
-      items: [
-        { title: 'Neurology Consultation (Dr. Patel)', cost: 160.0, quantity: 1 },
-      ],
-    },
-  });
-
-  // ----------------------------------------------------
-  // 11. Seed Payments (Table: Payment)
-  // ----------------------------------------------------
-  console.log('💵 Seeding Payments...');
   await prisma.payment.create({
     data: {
       billId: bill1.id,
-      amount: 225.0,
-      method: PaymentMethod.CARD,
-      transactionRef: 'TXN-CARD-9920148',
+      amount: 2000.0,
+      method: PaymentMethod.UPI,
+      transactionRef: 'UPI-SETTLE-992014872',
+      receivedAt: pastDate1,
     },
   });
 
-  // ----------------------------------------------------
-  // 12. Seed Notifications (Table: Notification)
-  // ----------------------------------------------------
+  // Bill 2: UNPAID bill for completed appointment 4 (Priyanka Verma - ₹1,365)
+  // Ready for patient to demonstrate live Pay Now!
+  await prisma.bill.create({
+    data: {
+      patientId: createdPatients[1].id,
+      appointmentId: apptCompleted2.id,
+      totalAmount: 1365.0,
+      discount: 0.0,
+      paidAmount: 0.0,
+      status: PaymentStatus.UNPAID,
+      items: {
+        items: [
+          { title: 'General Medicine Consultation - Dr. Suresh Iyer', category: 'CONSULTATION', cost: 800.0, quantity: 1, total: 800.0 },
+          { title: 'Pharmacy Rx: Amoxicillin-Clavulanate 625mg', category: 'MEDICATION', cost: 250.0, quantity: 1, total: 250.0 },
+          { title: 'Pharmacy Rx: Paracetamol 650mg', category: 'MEDICATION', cost: 250.0, quantity: 1, total: 250.0 },
+        ],
+        subtotal: 1300.0,
+        discount: 0,
+        discountRate: 0,
+        tax: 65.0,
+        taxRate: 5,
+        total: 1365.0,
+      },
+    },
+  });
+
+  // 12. Seed Notifications
   console.log('🔔 Seeding Notifications...');
   await prisma.notification.create({
     data: {
       userId: createdPatients[0].userId,
-      title: 'Consultation Completed & Prescription Issued',
-      message: 'Dr. Robert Chen has finalized your consultation and issued your digital prescription.',
+      title: 'Appointment Ready (Checked-In)',
+      message: 'You are checked in for today\'s 10:00 AM consultation with Dr. Vikram Malhotra.',
       isRead: false,
     },
   });
@@ -447,76 +608,84 @@ async function main() {
   await prisma.notification.create({
     data: {
       userId: createdPatients[1].userId,
-      title: 'Appointment Confirmed',
-      message: `Your appointment with Dr. Aisha Patel is confirmed for ${futureDate1.toISOString().split('T')[0]} at 11:30 AM.`,
-      isRead: true,
+      title: 'Invoice Ready for Settlement',
+      message: 'An invoice of ₹1,365.00 has been generated for your recent consultation with Dr. Suresh Iyer.',
+      isRead: false,
     },
   });
 
   await prisma.notification.create({
     data: {
-      userId: createdPatients[2].userId,
-      title: 'Lab Report Attached to Medical Profile',
-      message: 'Your Chest X-Ray diagnostic summary has been uploaded to your EHR profile.',
+      userId: createdDoctors[1].userId,
+      title: 'Doctor Leave Approved & Flagged',
+      message: 'Your leave has been scheduled. 1 appointment conflicts with this period and requires reassignment.',
       isRead: false,
     },
   });
 
-  // ----------------------------------------------------
-  // 13. Seed Audit Logs (Table: AuditLog)
-  // ----------------------------------------------------
+  await prisma.notification.create({
+    data: {
+      userId: adminUser.id,
+      title: 'Schedule Conflict Detected',
+      message: 'Dr. Aisha Patel is on leave on upcoming dates with 1 conflicting patient booking requiring reassignment.',
+      isRead: false,
+    },
+  });
+
+  // 13. Seed Audit Logs
   console.log('📝 Seeding Audit Logs...');
   await prisma.auditLog.createMany({
     data: [
       {
         userId: adminUser.id,
         action: 'SYSTEM_INITIALIZED',
-        details: 'HospitalCare Management System baseline schema and clinical divisions initialized.',
+        details: 'Connected Hospital Management Platform baseline initialized with Indian localization and INR currency.',
         ipAddress: '127.0.0.1',
       },
       {
-        userId: receptionistUser.id,
-        action: 'PATIENT_REGISTERED',
-        details: 'New patient intake completed for Johnathan Doe.',
-        ipAddress: '192.168.1.10',
-      },
-      {
         userId: createdPatients[0].userId,
-        action: 'APPOINTMENT_BOOKED',
-        details: 'Appointment booked with Dr. Robert Chen (Cardiology) for 10:00 AM.',
+        action: 'PATIENT_CHECKED_IN',
+        details: 'Patient Aarav Mehta checked in for consultation with Dr. Vikram Malhotra.',
         ipAddress: '192.168.1.45',
       },
       {
-        userId: createdDoctors[0].userId,
-        action: 'PRESCRIPTION_ISSUED',
-        details: 'Prescription recorded for Johnathan Doe (Diagnosis: Stage 1 Primary Hypertension).',
+        userId: createdDoctors[2].userId,
+        action: 'CONSULTATION_STARTED',
+        details: 'Dr. Suresh Iyer called patient Rohan Kapoor into consultation room.',
         ipAddress: '192.168.1.22',
       },
       {
-        userId: receptionistUser.id,
+        userId: createdDoctors[0].userId,
+        action: 'CONSULTATION_COMPLETED',
+        details: 'Consultation completed for Aarav Mehta by Dr. Vikram Malhotra. Bill #1 generated.',
+        ipAddress: '192.168.1.21',
+      },
+      {
+        userId: createdPatients[0].userId,
         action: 'PAYMENT_RECEIVED',
-        details: 'Payment of $225.00 settled via CARD for Bill #' + bill1.id,
+        details: 'Payment of ₹2,000.00 settled via UPI for Bill #' + bill1.id,
+        ipAddress: '192.168.1.45',
+      },
+      {
+        userId: adminUser.id,
+        action: 'DOCTOR_LEAVE_SCHEDULED',
+        details: 'Leave scheduled for Dr. Aisha Patel. 1 appointment flagged for reassignment.',
         ipAddress: '192.168.1.10',
       },
     ],
   });
 
   console.log('\n===========================================================');
-  console.log('✅ ALL DATABASE TABLES SUCCESSFULLY POPULATED WITH SAMPLE DATA!');
+  console.log('✅ DATABASE SUCCESSFULLY SEEDED WITH CONNECTED REALISTIC DATA!');
   console.log('===========================================================');
-  console.log('📋 Summary of Populated Tables:');
-  console.log('   • Users:          5 records (1 Admin, 1 Receptionist, 3 Doctors, 3 Patients)');
-  console.log('   • Departments:    5 clinical divisions');
-  console.log('   • Doctors:        3 specialist physicians');
-  console.log('   • DoctorSchedule: 10 weekly working shift slots');
-  console.log('   • Patients:       3 electronic medical profiles');
-  console.log('   • Appointments:   4 appointments (Completed, Confirmed, Cancelled)');
-  console.log('   • Prescriptions:  1 digital prescription with itemized medications');
-  console.log('   • MedicalReports: 4 diagnostic lab reports (ECG, CMP, MRI, X-Ray)');
-  console.log('   • Bills:          2 bills (Paid & Unpaid itemized billing)');
-  console.log('   • Payments:       1 card transaction settlement record');
-  console.log('   • Notifications:  3 user alerts');
-  console.log('   • AuditLogs:      5 system event logs');
+  console.log('📋 Seed Highlights:');
+  console.log('   • Patients:       4 registered patients (Mumbai, Bengaluru, Delhi, Hyderabad)');
+  console.log('   • Doctors:        3 specialists (Cardiology, Neurology, General Medicine)');
+  console.log('   • Doctor Leave:   1 active leave for Dr. Aisha Patel with conflict detection');
+  console.log('   • Appointments:   8 appointments across ALL statuses (Checked-In, In-Progress, Completed, Confirmed, Cancelled, No-Show)');
+  console.log('   • Prescriptions:  2 digital EHR prescriptions with symptoms & follow-up dates');
+  console.log('   • Bills & Pay:    1 Paid bill (₹2,000 via UPI) + 1 Unpaid bill (₹1,365 ready to test Pay Now)');
+  console.log('   • Notifications:  4 real-time alerts across patient, doctor, and admin');
   console.log('===========================================================\n');
 }
 

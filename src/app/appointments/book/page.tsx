@@ -24,6 +24,7 @@ import { getPatientsAction } from '@/actions/patient';
 import { getAvailableSlotsAction, bookAppointmentAction } from '@/actions/appointment';
 import { getAuthUserAction } from '@/actions/auth';
 import { SessionUser, SlotInfo, DoctorDailyAvailability } from '@/types';
+import { formatCurrency } from '@/lib/config/currency';
 
 function BookAppointmentContent() {
   const router = useRouter();
@@ -130,7 +131,8 @@ function BookAppointmentContent() {
   });
 
   const handleConfirmBooking = async () => {
-    if (!selectedDoctor || !selectedDate || !selectedSlot || !selectedPatientId) {
+    const effectivePatientId = selectedPatientId || currentUser?.patientId || '';
+    if (!selectedDoctor || !selectedDate || !selectedSlot || !effectivePatientId) {
       setBookingError('Please complete all booking selections.');
       return;
     }
@@ -139,7 +141,7 @@ function BookAppointmentContent() {
     setBookingError(null);
 
     const res = await bookAppointmentAction({
-      patientId: selectedPatientId,
+      patientId: effectivePatientId,
       doctorId: selectedDoctor.id,
       appointmentDate: selectedDate,
       timeSlot: selectedSlot,
@@ -328,7 +330,7 @@ function BookAppointmentContent() {
 
                   <div className="mt-4 pt-4 border-t border-hairline flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1 font-semibold text-ink number-mono">
-                      ${Number(doc.consultationFee).toFixed(2)}{' '}
+                      {formatCurrency(doc.consultationFee)}{' '}
                       <span className="font-normal text-muted">/ consultation</span>
                     </div>
                     <span className="text-brand font-medium flex items-center gap-1">
@@ -541,7 +543,7 @@ function BookAppointmentContent() {
                     Consultation Fee
                   </span>
                   <div className="text-lg font-bold text-semantic-up number-mono">
-                    ${Number(selectedDoctor.consultationFee).toFixed(2)}
+                    {formatCurrency(selectedDoctor.consultationFee)}
                   </div>
                 </div>
               </div>

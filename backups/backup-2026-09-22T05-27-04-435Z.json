@@ -1,0 +1,1288 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "timestamp": "2026-09-22T05:27:15.755Z",
+    "generator": "HMS-Backup-Utility",
+    "recordCounts": {
+      "users": 19,
+      "departments": 5,
+      "doctors": 4,
+      "doctorSchedules": 11,
+      "patients": 13,
+      "appointments": 18,
+      "prescriptions": 4,
+      "medicalReports": 5,
+      "bills": 2,
+      "payments": 3,
+      "notifications": 5,
+      "auditLogs": 28
+    }
+  },
+  "tables": {
+    "users": [
+      {
+        "id": "cmubhipu70005tnw46bz2l9bw",
+        "email": "admin@hospital.com",
+        "passwordHash": "$2b$10$y/hMJk/oSCcMqcYbX3kjl.Y7I9uCQsi/0v.f70Y0fykkxe17G8sCC",
+        "role": "ADMIN",
+        "name": "Dr. Arthur Vance (Chief Medical Officer)",
+        "phone": "+1 (555) 010-0001",
+        "createdAt": "2026-09-21T16:53:54.895Z",
+        "updatedAt": "2026-09-21T16:53:54.895Z"
+      },
+      {
+        "id": "cmubhiq9a0006tnw4o1i81ciz",
+        "email": "reception@hospital.com",
+        "passwordHash": "$2b$10$z9jx2Yf2elJN4oyFBKKzJebI31Hvur0rxCFsXBf4kaCyCfU/n8DpO",
+        "role": "RECEPTIONIST",
+        "name": "Sarah Jenkins",
+        "phone": "+1 (555) 010-0002",
+        "createdAt": "2026-09-21T16:53:55.438Z",
+        "updatedAt": "2026-09-21T16:53:55.438Z"
+      },
+      {
+        "id": "cmubhiqgu0007tnw4ghwyswzc",
+        "email": "dr.chen@hospital.com",
+        "passwordHash": "$2b$10$sP/jH14PCk8r5SHKLXNoxuqs/rmKLTMMG359FwucZTwvH45qejZx.",
+        "role": "DOCTOR",
+        "name": "Dr. Robert Chen",
+        "phone": "+1 (555) 201-1001",
+        "createdAt": "2026-09-21T16:53:55.710Z",
+        "updatedAt": "2026-09-21T16:53:55.710Z"
+      },
+      {
+        "id": "cmubhit6w000dtnw4p9wu0wer",
+        "email": "dr.patel@hospital.com",
+        "passwordHash": "$2b$10$sP/jH14PCk8r5SHKLXNoxuqs/rmKLTMMG359FwucZTwvH45qejZx.",
+        "role": "DOCTOR",
+        "name": "Dr. Aisha Patel",
+        "phone": "+1 (555) 201-1002",
+        "createdAt": "2026-09-21T16:53:59.240Z",
+        "updatedAt": "2026-09-21T16:53:59.240Z"
+      },
+      {
+        "id": "cmubhiva9000itnw4pcwjzxid",
+        "email": "dr.kim@hospital.com",
+        "passwordHash": "$2b$10$sP/jH14PCk8r5SHKLXNoxuqs/rmKLTMMG359FwucZTwvH45qejZx.",
+        "role": "DOCTOR",
+        "name": "Dr. David Kim",
+        "phone": "+1 (555) 201-1005",
+        "createdAt": "2026-09-21T16:54:01.677Z",
+        "updatedAt": "2026-09-21T16:54:01.677Z"
+      },
+      {
+        "id": "cmubhix5y000qtnw4hno1twzt",
+        "email": "patient.john@example.com",
+        "passwordHash": "$2b$10$to.C.23BqrcBCYDHtJHSp.Luq807n128k2j3KSFPHNsPEknlRYWVO",
+        "role": "PATIENT",
+        "name": "Johnathan Doe",
+        "phone": "+1 (555) 301-2001",
+        "createdAt": "2026-09-21T16:54:04.391Z",
+        "updatedAt": "2026-09-21T16:54:04.391Z"
+      },
+      {
+        "id": "cmubhiyuc000ttnw470iuodct",
+        "email": "patient.maria@example.com",
+        "passwordHash": "$2b$10$to.C.23BqrcBCYDHtJHSp.Luq807n128k2j3KSFPHNsPEknlRYWVO",
+        "role": "PATIENT",
+        "name": "Maria Elena Rodriguez",
+        "phone": "+1 (555) 301-2002",
+        "createdAt": "2026-09-21T16:54:06.564Z",
+        "updatedAt": "2026-09-21T16:54:06.564Z"
+      },
+      {
+        "id": "cmubhj03p000wtnw4pwptttrs",
+        "email": "patient.liam@example.com",
+        "passwordHash": "$2b$10$to.C.23BqrcBCYDHtJHSp.Luq807n128k2j3KSFPHNsPEknlRYWVO",
+        "role": "PATIENT",
+        "name": "Liam Alexander Johnson",
+        "phone": "+1 (555) 301-2003",
+        "createdAt": "2026-09-21T16:54:08.197Z",
+        "updatedAt": "2026-09-21T16:54:08.197Z"
+      },
+      {
+        "id": "cmubidpa00000tn9c3381se9j",
+        "email": "e2e.dr.chen@hospital.com",
+        "passwordHash": "dummy_hash",
+        "role": "DOCTOR",
+        "name": "Dr. Robert Chen (E2E)",
+        "phone": "+1 555-0200",
+        "createdAt": "2026-09-21T17:18:00.504Z",
+        "updatedAt": "2026-09-21T17:18:00.504Z"
+      },
+      {
+        "id": "cmubids110005tn9cztantwek",
+        "email": "e2e_patient_1@hospital.com",
+        "passwordHash": "dummy_hash",
+        "role": "PATIENT",
+        "name": "E2E Patient 1",
+        "phone": "+1 555-0301",
+        "createdAt": "2026-09-21T17:18:04.070Z",
+        "updatedAt": "2026-09-21T17:18:04.070Z"
+      },
+      {
+        "id": "cmubidtau0008tn9czh8g2ucz",
+        "email": "e2e_patient_2@hospital.com",
+        "passwordHash": "dummy_hash",
+        "role": "PATIENT",
+        "name": "E2E Patient 2",
+        "phone": "+1 555-0302",
+        "createdAt": "2026-09-21T17:18:05.718Z",
+        "updatedAt": "2026-09-21T17:18:05.718Z"
+      },
+      {
+        "id": "cmubidu5e000btn9c2ykdq6cs",
+        "email": "e2e_patient_3@hospital.com",
+        "passwordHash": "dummy_hash",
+        "role": "PATIENT",
+        "name": "E2E Patient 3",
+        "phone": "+1 555-0303",
+        "createdAt": "2026-09-21T17:18:06.819Z",
+        "updatedAt": "2026-09-21T17:18:06.819Z"
+      },
+      {
+        "id": "cmubiduzt000etn9coqicryff",
+        "email": "e2e_patient_4@hospital.com",
+        "passwordHash": "dummy_hash",
+        "role": "PATIENT",
+        "name": "E2E Patient 4",
+        "phone": "+1 555-0304",
+        "createdAt": "2026-09-21T17:18:07.913Z",
+        "updatedAt": "2026-09-21T17:18:07.913Z"
+      },
+      {
+        "id": "cmubidvu9000htn9ctfrbs8y2",
+        "email": "e2e_patient_5@hospital.com",
+        "passwordHash": "dummy_hash",
+        "role": "PATIENT",
+        "name": "E2E Patient 5",
+        "phone": "+1 555-0305",
+        "createdAt": "2026-09-21T17:18:09.009Z",
+        "updatedAt": "2026-09-21T17:18:09.009Z"
+      },
+      {
+        "id": "cmubidwoo000ktn9ckvy15ieb",
+        "email": "e2e_patient_6@hospital.com",
+        "passwordHash": "dummy_hash",
+        "role": "PATIENT",
+        "name": "E2E Patient 6",
+        "phone": "+1 555-0306",
+        "createdAt": "2026-09-21T17:18:10.104Z",
+        "updatedAt": "2026-09-21T17:18:10.104Z"
+      },
+      {
+        "id": "cmubidxj8000ntn9cgmhtbpxa",
+        "email": "e2e_patient_7@hospital.com",
+        "passwordHash": "dummy_hash",
+        "role": "PATIENT",
+        "name": "E2E Patient 7",
+        "phone": "+1 555-0307",
+        "createdAt": "2026-09-21T17:18:11.205Z",
+        "updatedAt": "2026-09-21T17:18:11.205Z"
+      },
+      {
+        "id": "cmubidydo000qtn9cz1n8kr76",
+        "email": "e2e_patient_8@hospital.com",
+        "passwordHash": "dummy_hash",
+        "role": "PATIENT",
+        "name": "E2E Patient 8",
+        "phone": "+1 555-0308",
+        "createdAt": "2026-09-21T17:18:12.300Z",
+        "updatedAt": "2026-09-21T17:18:12.300Z"
+      },
+      {
+        "id": "cmubidz88000ttn9ck4o8udxz",
+        "email": "e2e_patient_9@hospital.com",
+        "passwordHash": "dummy_hash",
+        "role": "PATIENT",
+        "name": "E2E Patient 9",
+        "phone": "+1 555-0309",
+        "createdAt": "2026-09-21T17:18:13.401Z",
+        "updatedAt": "2026-09-21T17:18:13.401Z"
+      },
+      {
+        "id": "cmubie0a8000wtn9cj3099ymn",
+        "email": "e2e_patient_10@hospital.com",
+        "passwordHash": "dummy_hash",
+        "role": "PATIENT",
+        "name": "E2E Patient 10",
+        "phone": "+1 555-03010",
+        "createdAt": "2026-09-21T17:18:14.498Z",
+        "updatedAt": "2026-09-21T17:18:14.498Z"
+      }
+    ],
+    "departments": [
+      {
+        "id": "cmubhiokk0000tnw45yfbzmxt",
+        "name": "Cardiology",
+        "description": "Cardiovascular diagnostics, ECG, echocardiograms, and preventative heart wellness.",
+        "createdAt": "2026-09-21T16:53:53.250Z",
+        "updatedAt": "2026-09-21T16:53:53.250Z"
+      },
+      {
+        "id": "cmubhiozt0001tnw4p780lk4o",
+        "name": "Neurology",
+        "description": "Comprehensive neurological evaluation and clinical care for brain and nerve disorders.",
+        "createdAt": "2026-09-21T16:53:53.802Z",
+        "updatedAt": "2026-09-21T16:53:53.802Z"
+      },
+      {
+        "id": "cmubhip7f0002tnw46c12acc2",
+        "name": "Orthopedics",
+        "description": "Musculoskeletal medicine, joint therapies, sports trauma, and rehabilitation.",
+        "createdAt": "2026-09-21T16:53:54.076Z",
+        "updatedAt": "2026-09-21T16:53:54.076Z"
+      },
+      {
+        "id": "cmubhipf20003tnw4nigyw9ge",
+        "name": "Pediatrics",
+        "description": "Primary pediatric healthcare, neonatal surveillance, and adolescent wellness.",
+        "createdAt": "2026-09-21T16:53:54.350Z",
+        "updatedAt": "2026-09-21T16:53:54.350Z"
+      },
+      {
+        "id": "cmubhipmn0004tnw4wsorbyq5",
+        "name": "General Medicine",
+        "description": "Outpatient primary care, chronic disease management, and preventative health checks.",
+        "createdAt": "2026-09-21T16:53:54.623Z",
+        "updatedAt": "2026-09-21T16:53:54.623Z"
+      }
+    ],
+    "doctors": [
+      {
+        "id": "cmubhiqoi0009tnw43zsajtiu",
+        "userId": "cmubhiqgu0007tnw4ghwyswzc",
+        "departmentId": "cmubhiokk0000tnw45yfbzmxt",
+        "specialization": "Interventional Cardiology & Electrophysiology",
+        "qualification": "MD (Cardiology), FACC",
+        "consultationFee": "150",
+        "createdAt": "2026-09-21T16:53:55.985Z",
+        "updatedAt": "2026-09-21T16:53:55.985Z"
+      },
+      {
+        "id": "cmubhiteh000ftnw4ukarxgxa",
+        "userId": "cmubhit6w000dtnw4p9wu0wer",
+        "departmentId": "cmubhiozt0001tnw4p780lk4o",
+        "specialization": "Neurological Disorders & Stroke Care",
+        "qualification": "MD, DM (Neurology)",
+        "consultationFee": "160",
+        "createdAt": "2026-09-21T16:53:59.513Z",
+        "updatedAt": "2026-09-21T16:53:59.513Z"
+      },
+      {
+        "id": "cmubhivhv000ktnw4dnog34zn",
+        "userId": "cmubhiva9000itnw4pcwjzxid",
+        "departmentId": "cmubhipmn0004tnw4wsorbyq5",
+        "specialization": "Internal Medicine & Preventative Care",
+        "qualification": "MBBS, MD (Internal Medicine)",
+        "consultationFee": "100",
+        "createdAt": "2026-09-21T16:54:02.227Z",
+        "updatedAt": "2026-09-21T16:54:02.227Z"
+      },
+      {
+        "id": "cmubidq4i0002tn9cmnbbdsv5",
+        "userId": "cmubidpa00000tn9c3381se9j",
+        "departmentId": "cmubhiokk0000tnw45yfbzmxt",
+        "specialization": "Interventional Cardiology",
+        "qualification": "MD, FACC",
+        "consultationFee": "175",
+        "createdAt": "2026-09-21T17:18:01.602Z",
+        "updatedAt": "2026-09-21T17:18:01.602Z"
+      }
+    ],
+    "doctorSchedules": [
+      {
+        "id": "cmubhiqoj000atnw4sebol7r1",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "dayOfWeek": 1,
+        "startTime": "09:00",
+        "endTime": "16:00",
+        "slotDuration": 30,
+        "isActive": true,
+        "createdAt": "2026-09-21T16:53:55.985Z",
+        "updatedAt": "2026-09-21T16:53:55.985Z"
+      },
+      {
+        "id": "cmubhiqoj000btnw4n9sh4o36",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "dayOfWeek": 3,
+        "startTime": "09:00",
+        "endTime": "16:00",
+        "slotDuration": 30,
+        "isActive": true,
+        "createdAt": "2026-09-21T16:53:55.985Z",
+        "updatedAt": "2026-09-21T16:53:55.985Z"
+      },
+      {
+        "id": "cmubhiqoj000ctnw4pnnbfcue",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "dayOfWeek": 5,
+        "startTime": "09:00",
+        "endTime": "13:00",
+        "slotDuration": 30,
+        "isActive": true,
+        "createdAt": "2026-09-21T16:53:55.985Z",
+        "updatedAt": "2026-09-21T16:53:55.985Z"
+      },
+      {
+        "id": "cmubhiteh000gtnw4lgp9zlbm",
+        "doctorId": "cmubhiteh000ftnw4ukarxgxa",
+        "dayOfWeek": 2,
+        "startTime": "10:00",
+        "endTime": "17:00",
+        "slotDuration": 30,
+        "isActive": true,
+        "createdAt": "2026-09-21T16:53:59.513Z",
+        "updatedAt": "2026-09-21T16:53:59.513Z"
+      },
+      {
+        "id": "cmubhiteh000htnw4tclx1m56",
+        "doctorId": "cmubhiteh000ftnw4ukarxgxa",
+        "dayOfWeek": 4,
+        "startTime": "10:00",
+        "endTime": "17:00",
+        "slotDuration": 30,
+        "isActive": true,
+        "createdAt": "2026-09-21T16:53:59.513Z",
+        "updatedAt": "2026-09-21T16:53:59.513Z"
+      },
+      {
+        "id": "cmubhivhv000ltnw4lyofknym",
+        "doctorId": "cmubhivhv000ktnw4dnog34zn",
+        "dayOfWeek": 1,
+        "startTime": "08:00",
+        "endTime": "16:00",
+        "slotDuration": 30,
+        "isActive": true,
+        "createdAt": "2026-09-21T16:54:02.227Z",
+        "updatedAt": "2026-09-21T16:54:02.227Z"
+      },
+      {
+        "id": "cmubhivhv000mtnw41cbwa3h5",
+        "doctorId": "cmubhivhv000ktnw4dnog34zn",
+        "dayOfWeek": 2,
+        "startTime": "08:00",
+        "endTime": "16:00",
+        "slotDuration": 30,
+        "isActive": true,
+        "createdAt": "2026-09-21T16:54:02.227Z",
+        "updatedAt": "2026-09-21T16:54:02.227Z"
+      },
+      {
+        "id": "cmubhivhv000ntnw40xd2u6m4",
+        "doctorId": "cmubhivhv000ktnw4dnog34zn",
+        "dayOfWeek": 3,
+        "startTime": "08:00",
+        "endTime": "16:00",
+        "slotDuration": 30,
+        "isActive": true,
+        "createdAt": "2026-09-21T16:54:02.227Z",
+        "updatedAt": "2026-09-21T16:54:02.227Z"
+      },
+      {
+        "id": "cmubhivhv000otnw4ak7t6huk",
+        "doctorId": "cmubhivhv000ktnw4dnog34zn",
+        "dayOfWeek": 4,
+        "startTime": "08:00",
+        "endTime": "16:00",
+        "slotDuration": 30,
+        "isActive": true,
+        "createdAt": "2026-09-21T16:54:02.227Z",
+        "updatedAt": "2026-09-21T16:54:02.227Z"
+      },
+      {
+        "id": "cmubhivhv000ptnw47mtzv675",
+        "doctorId": "cmubhivhv000ktnw4dnog34zn",
+        "dayOfWeek": 5,
+        "startTime": "08:00",
+        "endTime": "14:00",
+        "slotDuration": 30,
+        "isActive": true,
+        "createdAt": "2026-09-21T16:54:02.227Z",
+        "updatedAt": "2026-09-21T16:54:02.227Z"
+      },
+      {
+        "id": "cmubidqyw0004tn9cg0dqo22c",
+        "doctorId": "cmubidq4i0002tn9cmnbbdsv5",
+        "dayOfWeek": 3,
+        "startTime": "09:00",
+        "endTime": "17:00",
+        "slotDuration": 30,
+        "isActive": true,
+        "createdAt": "2026-09-21T17:18:02.696Z",
+        "updatedAt": "2026-09-21T17:18:02.696Z"
+      }
+    ],
+    "patients": [
+      {
+        "id": "cmubhixdo000stnw4ntli6r24",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "dateOfBirth": "1988-04-12T00:00:00.000Z",
+        "gender": "Male",
+        "bloodGroup": "O+",
+        "address": "742 Evergreen Terrace, Springfield, IL 62704",
+        "emergencyContact": "+1 (555) 301-9001 (Jane Doe - Spouse)",
+        "medicalHistorySummary": "Hypertension managed on ACE inhibitors. Mild seasonal pollen allergy.",
+        "createdAt": "2026-09-21T16:54:04.668Z",
+        "updatedAt": "2026-09-21T16:54:04.668Z"
+      },
+      {
+        "id": "cmubhiz1w000vtnw4i6vzdtlm",
+        "userId": "cmubhiyuc000ttnw470iuodct",
+        "dateOfBirth": "1994-08-25T00:00:00.000Z",
+        "gender": "Female",
+        "bloodGroup": "A+",
+        "address": "120 Elm Street, Suite 4B, Boston, MA 02115",
+        "emergencyContact": "+1 (555) 301-9002 (Carlos Rodriguez - Brother)",
+        "medicalHistorySummary": "No chronic illnesses. Prior appendectomy in 2018 with no complications.",
+        "createdAt": "2026-09-21T16:54:06.837Z",
+        "updatedAt": "2026-09-21T16:54:06.837Z"
+      },
+      {
+        "id": "cmubhj0b9000ytnw4rgc192id",
+        "userId": "cmubhj03p000wtnw4pwptttrs",
+        "dateOfBirth": "2002-11-03T00:00:00.000Z",
+        "gender": "Male",
+        "bloodGroup": "B-",
+        "address": "45 Baker Street, Apt 12, New York, NY 10001",
+        "emergencyContact": "+1 (555) 301-9003 (Clara Johnson - Mother)",
+        "medicalHistorySummary": "Mild persistent asthma managed with Albuterol PRN. Penicillin allergy.",
+        "createdAt": "2026-09-21T16:54:08.469Z",
+        "updatedAt": "2026-09-21T16:54:08.469Z"
+      },
+      {
+        "id": "cmubidsnz0007tn9cmjeulwzz",
+        "userId": "cmubids110005tn9cztantwek",
+        "dateOfBirth": "1988-04-12T00:00:00.000Z",
+        "gender": "Male",
+        "bloodGroup": "B+",
+        "address": null,
+        "emergencyContact": "+1 555-9999",
+        "medicalHistorySummary": null,
+        "createdAt": "2026-09-21T17:18:04.895Z",
+        "updatedAt": "2026-09-21T17:18:04.895Z"
+      },
+      {
+        "id": "cmubidtq5000atn9ca4bcvx8f",
+        "userId": "cmubidtau0008tn9czh8g2ucz",
+        "dateOfBirth": "1988-04-12T00:00:00.000Z",
+        "gender": "Female",
+        "bloodGroup": "B+",
+        "address": null,
+        "emergencyContact": "+1 555-9999",
+        "medicalHistorySummary": null,
+        "createdAt": "2026-09-21T17:18:06.269Z",
+        "updatedAt": "2026-09-21T17:18:06.269Z"
+      },
+      {
+        "id": "cmubidukl000dtn9co5afsw0t",
+        "userId": "cmubidu5e000btn9c2ykdq6cs",
+        "dateOfBirth": "1988-04-12T00:00:00.000Z",
+        "gender": "Male",
+        "bloodGroup": "B+",
+        "address": null,
+        "emergencyContact": "+1 555-9999",
+        "medicalHistorySummary": null,
+        "createdAt": "2026-09-21T17:18:07.365Z",
+        "updatedAt": "2026-09-21T17:18:07.365Z"
+      },
+      {
+        "id": "cmubidvf1000gtn9cc28pp30h",
+        "userId": "cmubiduzt000etn9coqicryff",
+        "dateOfBirth": "1988-04-12T00:00:00.000Z",
+        "gender": "Female",
+        "bloodGroup": "B+",
+        "address": null,
+        "emergencyContact": "+1 555-9999",
+        "medicalHistorySummary": null,
+        "createdAt": "2026-09-21T17:18:08.461Z",
+        "updatedAt": "2026-09-21T17:18:08.461Z"
+      },
+      {
+        "id": "cmubidw9g000jtn9cvx2r6az5",
+        "userId": "cmubidvu9000htn9ctfrbs8y2",
+        "dateOfBirth": "1988-04-12T00:00:00.000Z",
+        "gender": "Male",
+        "bloodGroup": "B+",
+        "address": null,
+        "emergencyContact": "+1 555-9999",
+        "medicalHistorySummary": null,
+        "createdAt": "2026-09-21T17:18:09.556Z",
+        "updatedAt": "2026-09-21T17:18:09.556Z"
+      },
+      {
+        "id": "cmubidx3y000mtn9ctry2vwa2",
+        "userId": "cmubidwoo000ktn9ckvy15ieb",
+        "dateOfBirth": "1988-04-12T00:00:00.000Z",
+        "gender": "Female",
+        "bloodGroup": "B+",
+        "address": null,
+        "emergencyContact": "+1 555-9999",
+        "medicalHistorySummary": null,
+        "createdAt": "2026-09-21T17:18:10.655Z",
+        "updatedAt": "2026-09-21T17:18:10.655Z"
+      },
+      {
+        "id": "cmubidxyg000ptn9csegy9uv8",
+        "userId": "cmubidxj8000ntn9cgmhtbpxa",
+        "dateOfBirth": "1988-04-12T00:00:00.000Z",
+        "gender": "Male",
+        "bloodGroup": "B+",
+        "address": null,
+        "emergencyContact": "+1 555-9999",
+        "medicalHistorySummary": null,
+        "createdAt": "2026-09-21T17:18:11.752Z",
+        "updatedAt": "2026-09-21T17:18:11.752Z"
+      },
+      {
+        "id": "cmubidysx000stn9cfuuygexs",
+        "userId": "cmubidydo000qtn9cz1n8kr76",
+        "dateOfBirth": "1988-04-12T00:00:00.000Z",
+        "gender": "Female",
+        "bloodGroup": "B+",
+        "address": null,
+        "emergencyContact": "+1 555-9999",
+        "medicalHistorySummary": null,
+        "createdAt": "2026-09-21T17:18:12.849Z",
+        "updatedAt": "2026-09-21T17:18:12.849Z"
+      },
+      {
+        "id": "cmubidznh000vtn9czttjv45i",
+        "userId": "cmubidz88000ttn9ck4o8udxz",
+        "dateOfBirth": "1988-04-12T00:00:00.000Z",
+        "gender": "Male",
+        "bloodGroup": "B+",
+        "address": null,
+        "emergencyContact": "+1 555-9999",
+        "medicalHistorySummary": null,
+        "createdAt": "2026-09-21T17:18:13.949Z",
+        "updatedAt": "2026-09-21T17:18:13.949Z"
+      },
+      {
+        "id": "cmubie0pi000ytn9cx57kk570",
+        "userId": "cmubie0a8000wtn9cj3099ymn",
+        "dateOfBirth": "1988-04-12T00:00:00.000Z",
+        "gender": "Female",
+        "bloodGroup": "B+",
+        "address": null,
+        "emergencyContact": "+1 555-9999",
+        "medicalHistorySummary": null,
+        "createdAt": "2026-09-21T17:18:15.318Z",
+        "updatedAt": "2026-09-21T17:18:15.318Z"
+      }
+    ],
+    "appointments": [
+      {
+        "id": "cmuc8chkk000ftnlsv9veh9lt",
+        "patientId": "cmubhiz1w000vtnw4i6vzdtlm",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "appointmentDate": "2027-11-10T00:00:00.000Z",
+        "timeSlot": "14:00",
+        "status": "CANCELLED",
+        "reason": "[Cancelled]: Patient unable to attend",
+        "createdAt": "2026-09-22T05:24:53.876Z",
+        "updatedAt": "2026-09-22T05:24:53.876Z"
+      },
+      {
+        "id": "cmuc8d2wy0001tn24t842f9uk",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "appointmentDate": "2027-10-13T00:00:00.000Z",
+        "timeSlot": "11:00",
+        "status": "CANCELLED",
+        "reason": "[Cancelled by Patient A]",
+        "createdAt": "2026-09-22T05:25:21.539Z",
+        "updatedAt": "2026-09-22T05:25:23.597Z"
+      },
+      {
+        "id": "cmuc8d5d90003tn24dfcwl3sz",
+        "patientId": "cmubhiz1w000vtnw4i6vzdtlm",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "appointmentDate": "2027-10-13T00:00:00.000Z",
+        "timeSlot": "14:00",
+        "status": "CONFIRMED",
+        "reason": "Rescheduled by Patient B to 14:00",
+        "createdAt": "2026-09-22T05:25:24.717Z",
+        "updatedAt": "2026-09-22T05:25:26.027Z"
+      },
+      {
+        "id": "cmubhj1cu0010tnw4rhcsjmy3",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "appointmentDate": "2026-09-18T00:00:00.000Z",
+        "timeSlot": "10:00",
+        "status": "COMPLETED",
+        "reason": "Routine cardiovascular follow-up and blood pressure assessment.",
+        "createdAt": "2026-09-21T16:54:09.823Z",
+        "updatedAt": "2026-09-21T16:54:09.823Z"
+      },
+      {
+        "id": "cmubhj1rz0012tnw4xrjsg1cu",
+        "patientId": "cmubhiz1w000vtnw4i6vzdtlm",
+        "doctorId": "cmubhiteh000ftnw4ukarxgxa",
+        "appointmentDate": "2026-09-23T00:00:00.000Z",
+        "timeSlot": "11:30",
+        "status": "CONFIRMED",
+        "reason": "Migraine evaluation and chronic headache review.",
+        "createdAt": "2026-09-21T16:54:10.367Z",
+        "updatedAt": "2026-09-21T16:54:10.367Z"
+      },
+      {
+        "id": "cmubhj1zj0014tnw47dz9kig9",
+        "patientId": "cmubhj0b9000ytnw4rgc192id",
+        "doctorId": "cmubhivhv000ktnw4dnog34zn",
+        "appointmentDate": "2026-09-25T00:00:00.000Z",
+        "timeSlot": "09:30",
+        "status": "CONFIRMED",
+        "reason": "Seasonal asthma assessment and spirometry follow-up.",
+        "createdAt": "2026-09-21T16:54:10.640Z",
+        "updatedAt": "2026-09-21T16:54:10.640Z"
+      },
+      {
+        "id": "cmubhj2730016tnw4329x476d",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "doctorId": "cmubhivhv000ktnw4dnog34zn",
+        "appointmentDate": "2026-09-23T00:00:00.000Z",
+        "timeSlot": "14:00",
+        "status": "CANCELLED",
+        "reason": "[Cancelled]: Patient had a work scheduling conflict.",
+        "createdAt": "2026-09-21T16:54:10.911Z",
+        "updatedAt": "2026-09-21T16:54:10.911Z"
+      },
+      {
+        "id": "cmubhlv4v0003tn08r2oug2j1",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "doctorId": "cmubhivhv000ktnw4dnog34zn",
+        "appointmentDate": "2026-09-22T00:00:00.000Z",
+        "timeSlot": "11:30",
+        "status": "CANCELLED",
+        "reason": null,
+        "createdAt": "2026-09-21T16:56:21.727Z",
+        "updatedAt": "2026-09-21T17:02:45.548Z"
+      },
+      {
+        "id": "cmuc8d7ki0005tn246t2sdc21",
+        "patientId": "cmubhj0b9000ytnw4rgc192id",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "appointmentDate": "2027-10-13T00:00:00.000Z",
+        "timeSlot": "10:00",
+        "status": "CONFIRMED",
+        "reason": "General consultation (Liam)",
+        "createdAt": "2026-09-22T05:25:27.571Z",
+        "updatedAt": "2026-09-22T05:25:27.571Z"
+      },
+      {
+        "id": "cmubie2e90010tn9cqb2v1s3h",
+        "patientId": "cmubidsnz0007tn9cmjeulwzz",
+        "doctorId": "cmubidq4i0002tn9cmnbbdsv5",
+        "appointmentDate": "2027-06-16T00:00:00.000Z",
+        "timeSlot": "10:30",
+        "status": "COMPLETED",
+        "reason": "Simultaneous applicant #1",
+        "createdAt": "2026-09-21T17:18:17.505Z",
+        "updatedAt": "2026-09-21T17:18:27.053Z"
+      },
+      {
+        "id": "cmubied9b0016tn9co0g4kcjp",
+        "patientId": "cmubidtq5000atn9ca4bcvx8f",
+        "doctorId": "cmubidq4i0002tn9cmnbbdsv5",
+        "appointmentDate": "2027-06-16T00:00:00.000Z",
+        "timeSlot": "14:00",
+        "status": "CANCELLED",
+        "reason": "[Cancelled]: Patient unable to attend",
+        "createdAt": "2026-09-21T17:18:31.584Z",
+        "updatedAt": "2026-09-21T17:18:33.802Z"
+      },
+      {
+        "id": "cmubixz9w0007tn3sztjh9elk",
+        "patientId": "cmubhiz1w000vtnw4i6vzdtlm",
+        "doctorId": "cmubhiteh000ftnw4ukarxgxa",
+        "appointmentDate": "2026-09-22T00:00:00.000Z",
+        "timeSlot": "11:00",
+        "status": "CANCELLED",
+        "reason": null,
+        "createdAt": "2026-09-21T17:33:46.581Z",
+        "updatedAt": "2026-09-21T17:40:27.155Z"
+      },
+      {
+        "id": "cmuc8aykx000ftni05hiwkiyy",
+        "patientId": "cmubhiz1w000vtnw4i6vzdtlm",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "appointmentDate": "2027-11-10T00:00:00.000Z",
+        "timeSlot": "14:00",
+        "status": "CANCELLED",
+        "reason": "[Cancelled]: Patient unable to attend",
+        "createdAt": "2026-09-22T05:23:42.609Z",
+        "updatedAt": "2026-09-22T05:23:42.609Z"
+      },
+      {
+        "id": "cmuc8c71s0001tnls21ujip74",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "appointmentDate": "2027-11-10T00:00:00.000Z",
+        "timeSlot": "09:30",
+        "status": "COMPLETED",
+        "reason": "Hypertension Follow-Up & ECG Evaluation",
+        "createdAt": "2026-09-22T05:24:40.240Z",
+        "updatedAt": "2026-09-22T05:24:40.240Z"
+      },
+      {
+        "id": "cmuc8daym0009tn24mccdjmyx",
+        "patientId": "cmubhj0b9000ytnw4rgc192id",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "appointmentDate": "2027-10-13T00:00:00.000Z",
+        "timeSlot": "15:00",
+        "status": "CONFIRMED",
+        "reason": "Dr. Chen 15:00 appointment",
+        "createdAt": "2026-09-22T05:25:31.966Z",
+        "updatedAt": "2026-09-22T05:25:31.966Z"
+      },
+      {
+        "id": "cmuc8db5o000btn24dlxuqddj",
+        "patientId": "cmubhiz1w000vtnw4i6vzdtlm",
+        "doctorId": "cmubhivhv000ktnw4dnog34zn",
+        "appointmentDate": "2027-10-13T00:00:00.000Z",
+        "timeSlot": "15:00",
+        "status": "CONFIRMED",
+        "reason": "Dr. Kim 15:00 appointment",
+        "createdAt": "2026-09-22T05:25:32.220Z",
+        "updatedAt": "2026-09-22T05:25:32.220Z"
+      },
+      {
+        "id": "cmuc8da970007tn24foy99u8n",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "appointmentDate": "2027-10-13T00:00:00.000Z",
+        "timeSlot": "09:30",
+        "status": "COMPLETED",
+        "reason": "Morning checkup",
+        "createdAt": "2026-09-22T05:25:31.051Z",
+        "updatedAt": "2026-09-22T05:25:36.095Z"
+      },
+      {
+        "id": "cmuc8djqd000ftn24xkv05xg8",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "doctorId": "cmubhiteh000ftnw4ukarxgxa",
+        "appointmentDate": "2027-10-12T00:00:00.000Z",
+        "timeSlot": "11:30",
+        "status": "CONFIRMED",
+        "reason": "Simultaneous applicant #1",
+        "createdAt": "2026-09-22T05:25:43.333Z",
+        "updatedAt": "2026-09-22T05:25:43.333Z"
+      }
+    ],
+    "prescriptions": [
+      {
+        "id": "cmubhj2eq0018tnw4580o3z3b",
+        "appointmentId": "cmubhj1cu0010tnw4rhcsjmy3",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "diagnosis": "Stage 1 Primary Hypertension & Mild Tachycardia",
+        "notes": "Continue low sodium DASH diet. Exercise 30 minutes daily. Follow up in 3 months with a fresh lipid profile.",
+        "medications": [
+          {
+            "name": "Lisinopril 10mg",
+            "dosage": "1 Tablet",
+            "duration": "90 days",
+            "frequency": "Once daily every morning",
+            "instructions": "Take after breakfast with water."
+          },
+          {
+            "name": "Metoprolol Tartrate 25mg",
+            "dosage": "1 Tablet",
+            "duration": "30 days",
+            "frequency": "Twice daily (morning & night)",
+            "instructions": "Monitor resting pulse."
+          }
+        ],
+        "createdAt": "2026-09-21T16:54:11.186Z",
+        "updatedAt": "2026-09-21T16:54:11.186Z"
+      },
+      {
+        "id": "cmubie9cb0012tn9cejdfkb4k",
+        "appointmentId": "cmubie2e90010tn9cqb2v1s3h",
+        "patientId": "cmubidsnz0007tn9cmjeulwzz",
+        "doctorId": "cmubidq4i0002tn9cmnbbdsv5",
+        "diagnosis": "Stage 1 Essential Hypertension",
+        "notes": "Advised 30 min daily walking, low sodium dietary plan. Follow-up in 4 weeks.",
+        "medications": [
+          {
+            "name": "Telmisartan",
+            "dosage": "40mg",
+            "duration": "30 days",
+            "frequency": "Once daily before breakfast"
+          },
+          {
+            "name": "Aspirin",
+            "dosage": "75mg",
+            "duration": "30 days",
+            "frequency": "Once daily after dinner"
+          }
+        ],
+        "createdAt": "2026-09-21T17:18:26.508Z",
+        "updatedAt": "2026-09-21T17:18:26.508Z"
+      },
+      {
+        "id": "cmuc8c7m10003tnls7nsqkg4n",
+        "appointmentId": "cmuc8c71s0001tnls21ujip74",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "diagnosis": "Essential Hypertension",
+        "notes": "Continue low sodium diet",
+        "medications": [
+          {
+            "name": "Amlodipine",
+            "dosage": "5mg",
+            "duration": "30 days",
+            "frequency": "Once daily"
+          },
+          {
+            "name": "Losartan",
+            "dosage": "50mg",
+            "duration": "30 days",
+            "frequency": "Once daily"
+          }
+        ],
+        "createdAt": "2026-09-22T05:24:40.969Z",
+        "updatedAt": "2026-09-22T05:24:40.969Z"
+      },
+      {
+        "id": "cmuc8ddo5000dtn24x5aggw9h",
+        "appointmentId": "cmuc8da970007tn24foy99u8n",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "diagnosis": "Mild Sinus Bradycardia & Essential Hypertension",
+        "notes": "Maintain low-sodium diet and record ambulatory BP daily. Follow up in 30 days.",
+        "medications": [
+          {
+            "name": "Metoprolol Tartrate",
+            "dosage": "25mg",
+            "duration": "30 days",
+            "frequency": "Twice daily after meals"
+          },
+          {
+            "name": "Hydrochlorothiazide",
+            "dosage": "12.5mg",
+            "duration": "30 days",
+            "frequency": "Once daily in morning"
+          }
+        ],
+        "createdAt": "2026-09-22T05:25:35.477Z",
+        "updatedAt": "2026-09-22T05:25:35.477Z"
+      }
+    ],
+    "medicalReports": [
+      {
+        "id": "cmubhj2tu001atnw4yim9sp7j",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "title": "Complete 12-Lead Electrocardiogram (ECG)",
+        "reportType": "ECG / Cardiology",
+        "fileUrl": "https://storage.hospitalcare.org/reports/ecg_scan_john_doe_2026.pdf",
+        "notes": "Normal sinus rhythm at 72 bpm. Normal PR interval and QRS duration. No ST-segment abnormalities noted.",
+        "createdAt": "2026-09-21T16:54:11.731Z",
+        "updatedAt": "2026-09-21T16:54:11.731Z"
+      },
+      {
+        "id": "cmubhj38z001ctnw47gbilp4l",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "doctorId": "cmubhiqoi0009tnw43zsajtiu",
+        "title": "Lipid & Comprehensive Metabolic Panel (CMP)",
+        "reportType": "Blood Test",
+        "fileUrl": "https://storage.hospitalcare.org/reports/blood_panel_john_doe.pdf",
+        "notes": "Total Cholesterol: 185 mg/dL (Desirable), Triglycerides: 140 mg/dL, Fasting Blood Glucose: 92 mg/dL.",
+        "createdAt": "2026-09-21T16:54:12.275Z",
+        "updatedAt": "2026-09-21T16:54:12.275Z"
+      },
+      {
+        "id": "cmubhj3gj001etnw4pmzuxasj",
+        "patientId": "cmubhiz1w000vtnw4i6vzdtlm",
+        "doctorId": "cmubhiteh000ftnw4ukarxgxa",
+        "title": "Brain Magnetic Resonance Imaging (MRI without Contrast)",
+        "reportType": "MRI Scan",
+        "fileUrl": "https://storage.hospitalcare.org/reports/brain_mri_maria_rodriguez.pdf",
+        "notes": "Normal brain parenchyma with no acute infarction, intracranial hemorrhage, or space-occupying lesion.",
+        "createdAt": "2026-09-21T16:54:12.548Z",
+        "updatedAt": "2026-09-21T16:54:12.548Z"
+      },
+      {
+        "id": "cmubhj3o4001gtnw4hlrlo710",
+        "patientId": "cmubhj0b9000ytnw4rgc192id",
+        "doctorId": "cmubhivhv000ktnw4dnog34zn",
+        "title": "Digital Posteroanterior Chest X-Ray",
+        "reportType": "X-Ray",
+        "fileUrl": "https://storage.hospitalcare.org/reports/chest_xray_liam_johnson.pdf",
+        "notes": "Clear bilateral lung fields. Cardiothoracic silhouette within normal physiological limits.",
+        "createdAt": "2026-09-21T16:54:12.820Z",
+        "updatedAt": "2026-09-21T16:54:12.820Z"
+      },
+      {
+        "id": "cmubieatb0014tn9cl6ssc7so",
+        "patientId": "cmubidsnz0007tn9cmjeulwzz",
+        "doctorId": "cmubidq4i0002tn9cmnbbdsv5",
+        "title": "Lipid Panel & Fasting Glucose",
+        "reportType": "Blood Test",
+        "fileUrl": "https://storage.hospitalcare.org/reports/lipid-panel-fasting.pdf",
+        "notes": "Cholesterol slightly elevated at 210 mg/dL.",
+        "createdAt": "2026-09-21T17:18:28.416Z",
+        "updatedAt": "2026-09-21T17:18:28.416Z"
+      }
+    ],
+    "bills": [
+      {
+        "id": "cmubhj4ax001ktnw4uzav2ed9",
+        "patientId": "cmubhiz1w000vtnw4i6vzdtlm",
+        "appointmentId": "cmubhj1rz0012tnw4xrjsg1cu",
+        "totalAmount": "160",
+        "discount": "10",
+        "paidAmount": "0",
+        "status": "UNPAID",
+        "items": [
+          {
+            "cost": 160,
+            "title": "Neurology Consultation (Dr. Patel)",
+            "quantity": 1
+          }
+        ],
+        "createdAt": "2026-09-21T16:54:13.642Z",
+        "updatedAt": "2026-09-21T16:54:13.642Z"
+      },
+      {
+        "id": "cmuc8c81a0005tnlstro0k1dx",
+        "patientId": "cmubhixdo000stnw4ntli6r24",
+        "appointmentId": "cmuc8c71s0001tnls21ujip74",
+        "totalAmount": "179.55",
+        "discount": "19",
+        "paidAmount": "179.55",
+        "status": "PAID",
+        "items": {
+          "tax": 8.55,
+          "items": [
+            {
+              "cost": 150,
+              "title": "Physician Consultation - Dr. Dr. Robert Chen",
+              "total": 150,
+              "category": "CONSULTATION",
+              "quantity": 1
+            },
+            {
+              "cost": 20,
+              "title": "Pharmacy: Amlodipine (5mg)",
+              "total": 20,
+              "category": "MEDICATION",
+              "quantity": 1
+            },
+            {
+              "cost": 20,
+              "title": "Pharmacy: Losartan (50mg)",
+              "total": 20,
+              "category": "MEDICATION",
+              "quantity": 1
+            }
+          ],
+          "total": 179.55,
+          "taxRate": 5,
+          "discount": 19,
+          "subtotal": 190,
+          "discountRate": 10
+        },
+        "createdAt": "2026-09-22T05:24:41.518Z",
+        "updatedAt": "2026-09-22T05:24:52.852Z"
+      }
+    ],
+    "payments": [
+      {
+        "id": "cmuc8cd2x0009tnlsy1yeu399",
+        "billId": "cmuc8c81a0005tnlstro0k1dx",
+        "amount": "50",
+        "method": "CARD",
+        "transactionRef": "TXN-CARD-PARTIAL-1",
+        "receivedAt": "2026-09-22T05:24:48.057Z"
+      },
+      {
+        "id": "cmuc8ceze000btnlsjzma0l9g",
+        "billId": "cmuc8c81a0005tnlstro0k1dx",
+        "amount": "50",
+        "method": "UPI",
+        "transactionRef": "TXN-UPI-PARTIAL-2",
+        "receivedAt": "2026-09-22T05:24:50.523Z"
+      },
+      {
+        "id": "cmuc8cggq000dtnlsic1otgpx",
+        "billId": "cmuc8c81a0005tnlstro0k1dx",
+        "amount": "79.55",
+        "method": "CASH",
+        "transactionRef": "TXN-CASH-SETTLE-3",
+        "receivedAt": "2026-09-22T05:24:52.442Z"
+      }
+    ],
+    "notifications": [
+      {
+        "id": "cmubhj5ct001qtnw4ecbh2wjg",
+        "userId": "cmubhiyuc000ttnw470iuodct",
+        "title": "Appointment Confirmed",
+        "message": "Your appointment with Dr. Aisha Patel is confirmed for 2026-09-23 at 11:30 AM.",
+        "isRead": true,
+        "createdAt": "2026-09-21T16:54:15.005Z"
+      },
+      {
+        "id": "cmubhj5kd001stnw4nehcxg3j",
+        "userId": "cmubhj03p000wtnw4pwptttrs",
+        "title": "Lab Report Attached to Medical Profile",
+        "message": "Your Chest X-Ray diagnostic summary has been uploaded to your EHR profile.",
+        "isRead": false,
+        "createdAt": "2026-09-21T16:54:15.277Z"
+      },
+      {
+        "id": "cmuc8asvz0007tni0bfn2o10u",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "title": "New Hospital Invoice Generated",
+        "message": "An invoice of $179.55 has been generated for your appointment with Dr. Dr. Robert Chen.",
+        "isRead": true,
+        "createdAt": "2026-09-22T05:23:35.231Z"
+      },
+      {
+        "id": "cmubhj4xo001otnw4m0oxm0pp",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "title": "Consultation Completed & Prescription Issued",
+        "message": "Dr. Robert Chen has finalized your consultation and issued your digital prescription.",
+        "isRead": true,
+        "createdAt": "2026-09-21T16:54:14.460Z"
+      },
+      {
+        "id": "cmuc8ccg70007tnlsfq6pfwu3",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "title": "New Hospital Invoice Generated",
+        "message": "An invoice of $179.55 has been generated for your appointment with Dr. Dr. Robert Chen.",
+        "isRead": true,
+        "createdAt": "2026-09-22T05:24:47.239Z"
+      }
+    ],
+    "auditLogs": [
+      {
+        "id": "cmubhj5ry001ttnw4dipiwa68",
+        "userId": "cmubhipu70005tnw46bz2l9bw",
+        "action": "SYSTEM_INITIALIZED",
+        "details": "HospitalCare Management System baseline schema and clinical divisions initialized.",
+        "ipAddress": "127.0.0.1",
+        "createdAt": "2026-09-21T16:54:15.550Z"
+      },
+      {
+        "id": "cmubhj5ry001utnw4whii3dsh",
+        "userId": "cmubhiq9a0006tnw4o1i81ciz",
+        "action": "PATIENT_REGISTERED",
+        "details": "New patient intake completed for Johnathan Doe.",
+        "ipAddress": "192.168.1.10",
+        "createdAt": "2026-09-21T16:54:15.550Z"
+      },
+      {
+        "id": "cmubhj5ry001vtnw43vjv5v4e",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "action": "APPOINTMENT_BOOKED",
+        "details": "Appointment booked with Dr. Robert Chen (Cardiology) for 10:00 AM.",
+        "ipAddress": "192.168.1.45",
+        "createdAt": "2026-09-21T16:54:15.550Z"
+      },
+      {
+        "id": "cmubhj5ry001wtnw43s4i00hb",
+        "userId": "cmubhiqgu0007tnw4ghwyswzc",
+        "action": "PRESCRIPTION_ISSUED",
+        "details": "Prescription recorded for Johnathan Doe (Diagnosis: Stage 1 Primary Hypertension).",
+        "ipAddress": "192.168.1.22",
+        "createdAt": "2026-09-21T16:54:15.550Z"
+      },
+      {
+        "id": "cmubhj5ry001xtnw4cj2z01ob",
+        "userId": "cmubhiq9a0006tnw4o1i81ciz",
+        "action": "PAYMENT_RECEIVED",
+        "details": "Payment of $225.00 settled via CARD for Bill #cmubhj3vr001itnw4wgnr4u20",
+        "ipAddress": "192.168.1.10",
+        "createdAt": "2026-09-21T16:54:15.550Z"
+      },
+      {
+        "id": "cmubhk7v70001tn08pjjca5vz",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "action": "LOGIN_SUCCESS",
+        "details": "User logged in with role: PATIENT",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T16:55:04.915Z"
+      },
+      {
+        "id": "cmubhlxur0005tn08c1s4m7qy",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "action": "APPOINTMENT_BOOKED",
+        "details": "Appointment booked with Dr. Dr. David Kim on 2026-09-22 at 11:30 for patient Johnathan Doe",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T16:56:25.251Z"
+      },
+      {
+        "id": "cmubhnahy0007tn0831m355ap",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "action": "LOGOUT",
+        "details": "User logged out",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T16:57:28.294Z"
+      },
+      {
+        "id": "cmubhnt190009tn08cvvxzk0p",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "action": "LOGIN_SUCCESS",
+        "details": "User logged in with role: PATIENT",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T16:57:52.317Z"
+      },
+      {
+        "id": "cmubhnxet000btn08sm68l64g",
+        "userId": "cmubhiqgu0007tnw4ghwyswzc",
+        "action": "LOGIN_SUCCESS",
+        "details": "User logged in with role: DOCTOR",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T16:57:57.989Z"
+      },
+      {
+        "id": "cmubhsgus000dtn084kurrfre",
+        "userId": "cmubhiqgu0007tnw4ghwyswzc",
+        "action": "LOGOUT",
+        "details": "User logged out",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:01:29.567Z"
+      },
+      {
+        "id": "cmubhslsk000ftn08cj7j5q8g",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "action": "LOGIN_SUCCESS",
+        "details": "User logged in with role: PATIENT",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:01:36.212Z"
+      },
+      {
+        "id": "cmubhu5u7000htn08lyqand8o",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "action": "APPOINTMENT_CANCELLED",
+        "details": "Appointment ID cmubhlv4v0003tn08r2oug2j1 cancelled by Johnathan Doe (PATIENT). Reason: Not specified",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:02:48.847Z"
+      },
+      {
+        "id": "cmubivd3l0001tn3sk6ikxu70",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "action": "LOGOUT",
+        "details": "User logged out",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:31:44.525Z"
+      },
+      {
+        "id": "cmubiwcin0003tn3sucopx9l3",
+        "userId": "cmubhiyuc000ttnw470iuodct",
+        "action": "LOGIN_SUCCESS",
+        "details": "User logged in with role: PATIENT",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:32:30.431Z"
+      },
+      {
+        "id": "cmubiy0un0009tn3s26g4ecdm",
+        "userId": "cmubhiyuc000ttnw470iuodct",
+        "action": "APPOINTMENT_BOOKED",
+        "details": "Appointment booked with Dr. Dr. Aisha Patel on 2026-09-22 at 11:00 for patient Maria Elena Rodriguez",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:33:48.624Z"
+      },
+      {
+        "id": "cmubiz31f000btn3suv2h17jz",
+        "userId": "cmubhiyuc000ttnw470iuodct",
+        "action": "LOGOUT",
+        "details": "User logged out",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:34:37.860Z"
+      },
+      {
+        "id": "cmubizpn5000dtn3sapwc1yen",
+        "userId": "cmubhit6w000dtnw4p9wu0wer",
+        "action": "LOGIN_SUCCESS",
+        "details": "User logged in with role: DOCTOR",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:35:07.410Z"
+      },
+      {
+        "id": "cmubj1lxz000ftn3s1wmcnvu4",
+        "userId": "cmubhit6w000dtnw4p9wu0wer",
+        "action": "LOGOUT",
+        "details": "User logged out",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:36:35.927Z"
+      },
+      {
+        "id": "cmubj2k7u000htn3sr25quits",
+        "userId": "cmubhj03p000wtnw4pwptttrs",
+        "action": "LOGIN_SUCCESS",
+        "details": "User logged in with role: PATIENT",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:37:20.347Z"
+      },
+      {
+        "id": "cmubj57mv000jtn3sw4e3dvxb",
+        "userId": "cmubhj03p000wtnw4pwptttrs",
+        "action": "LOGOUT",
+        "details": "User logged out",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:39:23.736Z"
+      },
+      {
+        "id": "cmubj5rlz000ltn3s46a7dudh",
+        "userId": "cmubhiyuc000ttnw470iuodct",
+        "action": "LOGIN_SUCCESS",
+        "details": "User logged in with role: PATIENT",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:39:49.895Z"
+      },
+      {
+        "id": "cmubj6n2s000ntn3szxbcjsq3",
+        "userId": "cmubhiyuc000ttnw470iuodct",
+        "action": "APPOINTMENT_CANCELLED",
+        "details": "Appointment ID cmubixz9w0007tn3sztjh9elk cancelled by Maria Elena Rodriguez (PATIENT). Reason: Not specified",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:40:30.402Z"
+      },
+      {
+        "id": "cmubj9dh8000ptn3s1za7n1q2",
+        "userId": "cmubhiyuc000ttnw470iuodct",
+        "action": "LOGOUT",
+        "details": "User logged out",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:42:38.204Z"
+      },
+      {
+        "id": "cmubjafkd000rtn3s5gojynzi",
+        "userId": "cmubhit6w000dtnw4p9wu0wer",
+        "action": "LOGIN_SUCCESS",
+        "details": "User logged in with role: DOCTOR",
+        "ipAddress": null,
+        "createdAt": "2026-09-21T17:43:27.565Z"
+      },
+      {
+        "id": "cmuc6xql50001tnvsbbpk5jyb",
+        "userId": "cmubhiyuc000ttnw470iuodct",
+        "action": "LOGIN_SUCCESS",
+        "details": "User logged in with role: PATIENT",
+        "ipAddress": null,
+        "createdAt": "2026-09-22T04:45:26.101Z"
+      },
+      {
+        "id": "cmuc8b1tk000htni0k51vg88b",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "action": "BILL_PAID_IN_FULL",
+        "details": "Bill cmuc8aoyc0005tni05pnutlbo settled in full for $179.55 across 3 installments",
+        "ipAddress": null,
+        "createdAt": "2026-09-22T05:23:46.808Z"
+      },
+      {
+        "id": "cmuc8ckig000htnlsoaux5493",
+        "userId": "cmubhix5y000qtnw4hno1twzt",
+        "action": "BILL_PAID_IN_FULL",
+        "details": "Bill cmuc8c81a0005tnlstro0k1dx settled in full for $179.55 across 3 installments",
+        "ipAddress": null,
+        "createdAt": "2026-09-22T05:24:57.689Z"
+      }
+    ]
+  }
+}

@@ -33,8 +33,29 @@ export const cancelAppointmentSchema = z.object({
 
 export type CancelAppointmentInput = z.infer<typeof cancelAppointmentSchema>;
 
+export const reassignAppointmentSchema = z.object({
+  appointmentId: z.string().min(1, 'Appointment ID is required.'),
+  newDoctorId: z.string().min(1, 'New Doctor ID is required.'),
+  reason: z.string().max(500).optional().nullable(),
+});
+
+export type ReassignAppointmentInput = z.infer<typeof reassignAppointmentSchema>;
+
 export const appointmentFilterSchema = z.object({
-  status: z.enum(['ALL', 'PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW']).default('ALL'),
+  status: z
+    .enum([
+      'ALL',
+      'SCHEDULED',
+      'PENDING',
+      'CONFIRMED',
+      'CHECKED_IN',
+      'IN_PROGRESS',
+      'COMPLETED',
+      'CANCELLED',
+      'RESCHEDULED',
+      'NO_SHOW',
+    ])
+    .default('ALL'),
   doctorId: z.string().optional(),
   patientId: z.string().optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),

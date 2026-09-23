@@ -216,6 +216,9 @@ export async function createPatientAction(
       });
 
       return newPatient;
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     await logAudit({
@@ -294,6 +297,9 @@ export async function updatePatientAction(input: UpdatePatientInput): Promise<Ac
           user: true,
         },
       });
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     await logAudit({
@@ -340,5 +346,113 @@ export async function deletePatientAction(id: string): Promise<ActionResponse<vo
   } catch (error: any) {
     console.error('Error in deletePatientAction:', error);
     return { success: false, message: error.message || 'Failed to delete patient profile.' };
+  }
+}
+
+export async function getPatientFullDossierAction(id: string): Promise<ActionResponse<any>> {
+  try {
+    const currentUser = await requireAuth();
+
+    const patient = await prisma.patient.findUnique({
+      where: { id },
+      include: {
+        user: true,
+        appointments: {
+          orderBy: { appointmentDate: 'desc' },
+          include: {
+            doctor: {
+              include: {
+                user: { select: { name: true, email: true, phone: true } },
+                department: { select: { name: true } },
+              },
+            },
+            prescription: true,
+            bill: { include: { payments: true } },
+          },
+        },
+        medicalReports: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            doctor: {
+              include: { user: { select: { name: true } } },
+            },
+          },
+        },
+        prescriptions: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            doctor: {
+              include: {
+                user: { select: { name: true } },
+                department: { select: { name: true } },
+              },
+            },
+          },
+        },
+        bills: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            payments: { orderBy: { receivedAt: 'desc' } },
+            appointment: {
+              include: {
+                doctor: { include: { user: { select: { name: true } } } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!patient) {
+      return { success: false, message: 'Patient record not found.' };
+    }
+
+    if (currentUser.role === Role.PATIENT && currentUser.patientId !== patient.id) {
+      return { success: false, message: 'Access denied.' };
+    }
+
+    return {
+      success: true,
+      data: toPlainObject(patient),
+    };
+  } catch (error: any) {
+    console.error('Error in getPatientFullDossierAction:', error);
+    return { success: false, message: error.message || 'Failed to retrieve patient dossier.' };
+  }
+}
+
+export async function togglePatientActiveAction(id: string): Promise<ActionResponse<any>> {
+  try {
+    const currentUser = await requireRole([Role.ADMIN]);
+
+    const patient = await prisma.patient.findUnique({
+      where: { id },
+      include: { user: true },
+    });
+
+    if (!patient) {
+      return { success: false, message: 'Patient not found.' };
+    }
+
+    const nextState = !patient.user.isActive;
+
+    await prisma.user.update({
+      where: { id: patient.userId },
+      data: { isActive: nextState },
+    });
+
+    await logAudit({
+      userId: currentUser.id,
+      action: nextState ? 'PATIENT_ACTIVATED' : 'PATIENT_DEACTIVATED',
+      details: `Patient ${patient.user.name} (${patient.id}) account was ${nextState ? 'reactivated' : 'deactivated'} by Admin ${currentUser.name}`,
+    });
+
+    return {
+      success: true,
+      message: `Patient account is now ${nextState ? 'Active' : 'Deactivated'}.`,
+      data: { isActive: nextState },
+    };
+  } catch (error: any) {
+    return { success: false, message: error.message || 'Failed to toggle patient status.' };
   }
 }

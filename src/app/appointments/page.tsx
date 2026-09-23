@@ -21,6 +21,8 @@ import {
   Eye,
   RefreshCw,
   Pill,
+  CreditCard,
+  UserCheck,
 } from 'lucide-react';
 import { DashboardShell } from '@/components/ui/DashboardShell';
 import { Modal } from '@/components/ui/Modal';
@@ -29,6 +31,7 @@ import {
   rescheduleAppointmentAction,
   cancelAppointmentAction,
   getAvailableSlotsAction,
+  checkInAppointmentAction,
 } from '@/actions/appointment';
 import { createPrescriptionAction } from '@/actions/medical-record';
 import { getAuthUserAction } from '@/actions/auth';
@@ -181,6 +184,16 @@ export default function AppointmentsPage() {
     }
   };
 
+  const handleCheckIn = async (apptId: string) => {
+    const res = await checkInAppointmentAction(apptId);
+    if (res.success) {
+      setSuccessToast('Check-in confirmed! You are queued in the clinical waiting room.');
+      loadAppointments();
+    } else {
+      alert(res.message || 'Check-in failed.');
+    }
+  };
+
   // Prescription Handlers
   const handleAddMedication = () => {
     setRxMedications((prev) => [
@@ -253,10 +266,20 @@ export default function AppointmentsPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'CHECKED_IN':
+        return <span className="badge-pill !bg-amber-100 !text-amber-800 !border-amber-300 font-bold">WAITING IN CLINIC</span>;
+      case 'IN_PROGRESS':
+        return <span className="badge-pill !bg-blue-100 !text-blue-800 !border-blue-300 font-bold">IN EXAMINATION</span>;
       case 'CONFIRMED':
         return <span className="badge-pill !bg-emerald-50 !text-emerald-700 !border-emerald-200">CONFIRMED</span>;
+      case 'SCHEDULED':
+        return <span className="badge-pill !bg-slate-100 !text-slate-700 !border-slate-300">SCHEDULED</span>;
       case 'COMPLETED':
-        return <span className="badge-pill !bg-blue-50 !text-brand !border-blue-200">COMPLETED</span>;
+        return <span className="badge-pill !bg-emerald-100 !text-emerald-800 !border-emerald-300">COMPLETED</span>;
+      case 'RESCHEDULED':
+        return <span className="badge-pill !bg-purple-50 !text-purple-700 !border-purple-200">RESCHEDULED</span>;
+      case 'NO_SHOW':
+        return <span className="badge-pill !bg-orange-50 !text-orange-700 !border-orange-200">NO SHOW</span>;
       case 'CANCELLED':
         return <span className="badge-pill !bg-red-50 !text-semantic-down !border-red-200">CANCELLED</span>;
       default:
@@ -296,7 +319,9 @@ export default function AppointmentsPage() {
           <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-surface-soft border border-hairline">
             {[
               { key: 'ALL', label: 'All' },
-              { key: 'CONFIRMED', label: 'Confirmed / Upcoming' },
+              { key: 'CHECKED_IN', label: 'Waiting Room' },
+              { key: 'IN_PROGRESS', label: 'In Progress' },
+              { key: 'CONFIRMED', label: 'Upcoming' },
               { key: 'COMPLETED', label: 'Completed' },
               { key: 'CANCELLED', label: 'Cancelled' },
             ].map((tab) => (
@@ -306,7 +331,7 @@ export default function AppointmentsPage() {
                   setStatusFilter(tab.key);
                   setPage(1);
                 }}
-                className={`px-4 py-1.5 rounded-pill text-xs font-semibold transition ${
+                className={`px-3.5 py-1.5 rounded-pill text-xs font-semibold transition ${
                   statusFilter === tab.key
                     ? 'bg-white text-ink shadow-sm border border-hairline'
                     : 'text-muted hover:text-ink'
@@ -401,8 +426,18 @@ export default function AppointmentsPage() {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                      {/* Check In Action if Confirmed / Scheduled */}
+                      {(appt.status === 'CONFIRMED' || appt.status === 'SCHEDULED') && (
+                        <button
+                          onClick={() => handleCheckIn(appt.id)}
+                          className="btn-primary !py-2 !px-3 !text-xs flex items-center gap-1.5 shadow-sm"
+                        >
+                          <UserCheck className="h-3.5 w-3.5" /> Check In
+                        </button>
+                      )}
+
                       {/* Doctor Write Prescription */}
-                      {isDoctor && isConfirmed && (
+                      {isDoctor && (appt.status === 'CONFIRMED' || appt.status === 'CHECKED_IN' || appt.status === 'IN_PROGRESS') && (
                         <button
                           onClick={() => {
                             setPrescriptionModalAppt(appt);
@@ -411,7 +446,7 @@ export default function AppointmentsPage() {
                           }}
                           className="btn-primary !py-2 !px-4 !text-xs flex items-center gap-1.5"
                         >
-                          <Pill className="h-3.5 w-3.5" /> Write Prescription
+                          <Pill className="h-3.5 w-3.5" /> Consult & Prescribe
                         </button>
                       )}
 
@@ -421,12 +456,22 @@ export default function AppointmentsPage() {
                           onClick={() => setViewRxModalAppt(appt)}
                           className="btn-secondary !py-2 !px-3 !text-xs flex items-center gap-1.5"
                         >
-                          <FileText className="h-3.5 w-3.5 text-brand" /> View Prescription
+                          <FileText className="h-3.5 w-3.5 text-brand" /> Prescription
                         </button>
                       )}
 
+                      {/* View Hospital Bill if generated */}
+                      {appt.bill && (
+                        <Link
+                          href="/billing"
+                          className="btn-secondary !py-2 !px-3 !text-xs flex items-center gap-1.5"
+                        >
+                          <CreditCard className="h-3.5 w-3.5 text-brand" /> View Bill
+                        </Link>
+                      )}
+
                       {/* Reschedule Button */}
-                      {isConfirmed && (
+                      {(appt.status === 'CONFIRMED' || appt.status === 'SCHEDULED') && (
                         <button
                           onClick={() => {
                             setRescheduleModalAppt(appt);
@@ -440,7 +485,7 @@ export default function AppointmentsPage() {
                       )}
 
                       {/* Cancel Button */}
-                      {isConfirmed && (
+                      {(appt.status === 'CONFIRMED' || appt.status === 'SCHEDULED') && (
                         <button
                           onClick={() => setCancelModalAppt(appt)}
                           className="px-3 py-2 rounded-pill border border-red-200 text-semantic-down hover:bg-red-50 text-xs font-semibold transition flex items-center gap-1.5"

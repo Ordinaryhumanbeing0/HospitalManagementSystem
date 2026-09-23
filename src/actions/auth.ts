@@ -141,6 +141,9 @@ export async function registerPatientAction(
       });
 
       return { user: newUser, patient: newPatient };
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     const sessionUser: SessionUser = {
@@ -198,9 +201,68 @@ export async function logoutAction(): Promise<ActionResponse<void>> {
 
 export async function getAuthUserAction(): Promise<ActionResponse<SessionUser | null>> {
   try {
-    const user = await getSessionUser();
-    return { success: true, data: user };
+    const rawUser = await getSessionUser();
+    if (!rawUser) {
+      return { success: true, data: null };
+    }
+
+    // Verify against DB to ensure IDs are active and not stale from migrations/seeds
+    const dbUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { id: rawUser.id },
+          { email: rawUser.email.toLowerCase() },
+        ],
+      },
+      include: {
+        patient: { select: { id: true } },
+        doctor: { select: { id: true } },
+      },
+    });
+
+    if (!dbUser || !dbUser.isActive) {
+      await clearSessionCookie();
+      return { success: true, data: null };
+    }
+
+    let patientId = dbUser.patient?.id || null;
+    if (dbUser.role === Role.PATIENT && !patientId) {
+      const newPat = await prisma.patient.create({
+        data: {
+          userId: dbUser.id,
+          dateOfBirth: new Date('2000-01-01'),
+          gender: 'OTHER',
+        },
+      });
+      patientId = newPat.id;
+    }
+
+    const freshUser: SessionUser = {
+      id: dbUser.id,
+      email: dbUser.email,
+      name: dbUser.name,
+      role: dbUser.role,
+      phone: dbUser.phone,
+      patientId,
+      doctorId: dbUser.doctor?.id || null,
+    };
+
+    if (
+      rawUser.id !== freshUser.id ||
+      rawUser.patientId !== freshUser.patientId ||
+      rawUser.doctorId !== freshUser.doctorId ||
+      rawUser.role !== freshUser.role
+    ) {
+      try {
+        await createSessionCookie(freshUser);
+      } catch {
+        // Safe fallback in read-only render contexts
+      }
+    }
+
+    return { success: true, data: freshUser };
   } catch (error) {
+    console.error('Error in getAuthUserAction:', error);
     return { success: false, data: null };
   }
 }

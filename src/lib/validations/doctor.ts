@@ -4,9 +4,20 @@ export const doctorScheduleItemSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6), // 0: Sun ... 6: Sat
   startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid start time format (HH:MM).' }),
   endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid end time format (HH:MM).' }),
+  breakStartTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).optional().nullable(),
+  breakEndTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).optional().nullable(),
   slotDuration: z.number().int().min(10).max(120).default(30),
   isActive: z.boolean().default(true),
 });
+
+export const doctorLeaveSchema = z.object({
+  doctorId: z.string().min(1, 'Doctor ID is required.'),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be YYYY-MM-DD.'),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be YYYY-MM-DD.'),
+  reason: z.string().trim().max(500).optional().nullable(),
+});
+
+export type DoctorLeaveInput = z.infer<typeof doctorLeaveSchema>;
 
 export const createDoctorSchema = z.object({
   name: z.string().trim().min(2, { message: 'Doctor name is required.' }),

@@ -23,13 +23,32 @@ import {
   User,
   ShieldCheck,
   RefreshCw,
+  Coffee,
+  CalendarOff,
+  PlayCircle,
+  UserCheck,
+  History,
+  AlertTriangle,
 } from 'lucide-react';
 import { DashboardShell } from '@/components/ui/DashboardShell';
 import { Modal } from '@/components/ui/Modal';
 import { getAuthUserAction } from '@/actions/auth';
-import { getDoctorByIdAction, updateDoctorScheduleAction } from '@/actions/doctor';
-import { getAppointmentsAction, updateAppointmentStatusAction } from '@/actions/appointment';
-import { createPrescriptionAction } from '@/actions/medical-record';
+import {
+  getDoctorByIdAction,
+  updateDoctorScheduleAction,
+  getDoctorLeavesAction,
+  addDoctorLeaveAction,
+  deleteDoctorLeaveAction,
+} from '@/actions/doctor';
+import { formatCurrency } from '@/lib/config/currency';
+import {
+  getAppointmentsAction,
+  checkInAppointmentAction,
+  startConsultationAction,
+  markNoShowAction,
+  cancelAppointmentAction,
+} from '@/actions/appointment';
+import { createPrescriptionAction, getPatientMedicalHistoryAction } from '@/actions/medical-record';
 import { SessionUser, MedicationItemType } from '@/types';
 import { AppointmentStatus } from '@prisma/client';
 
@@ -40,42 +59,80 @@ export default function DoctorDashboardPage() {
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(null);
   const [doctorProfile, setDoctorProfile] = useState<any | null>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'>('CONFIRMED');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'CHECKED_IN' | 'IN_PROGRESS' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'>('CHECKED_IN');
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // 1. Schedule Configuration Modal State
+  // Statistics
+  const [queueMetrics, setQueueMetrics] = useState({
+    waitingRoom: 0,
+    inProgress: 0,
+    upcoming: 0,
+    completedToday: 0,
+    totalToday: 0,
+  });
+
+  // 1. Schedule & Break Times Modal State
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [editingSchedules, setEditingSchedules] = useState<
-    Array<{ dayOfWeek: number; startTime: string; endTime: string; slotDuration: number; isActive: boolean }>
+    Array<{
+      dayOfWeek: number;
+      startTime: string;
+      endTime: string;
+      breakStartTime?: string;
+      breakEndTime?: string;
+      slotDuration: number;
+      isActive: boolean;
+    }>
   >([]);
   const [savingSchedule, setSavingSchedule] = useState(false);
   const [scheduleError, setScheduleError] = useState<string | null>(null);
 
-  // 2. Consultation & Prescription Modal State
+  // 2. Doctor Leave Management State
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [leavesList, setLeavesList] = useState<any[]>([]);
+  const [leaveStartDate, setLeaveStartDate] = useState('');
+  const [leaveEndDate, setLeaveEndDate] = useState('');
+  const [leaveReason, setLeaveReason] = useState('');
+  const [savingLeave, setSavingLeave] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
+  const [leaveConflictWarning, setLeaveConflictWarning] = useState<string | null>(null);
+
+  // 3. Consultation & Prescription Modal State
   const [isRxModalOpen, setIsRxModalOpen] = useState(false);
   const [activeConsultationAppt, setActiveConsultationAppt] = useState<any | null>(null);
+  const [rxSymptoms, setRxSymptoms] = useState('');
   const [rxDiagnosis, setRxDiagnosis] = useState('');
   const [rxNotes, setRxNotes] = useState('');
+  const [rxFollowUpDate, setRxFollowUpDate] = useState('');
   const [rxMedications, setRxMedications] = useState<MedicationItemType[]>([
     { name: '', dosage: '', frequency: 'Twice daily after meals', duration: '5 days', instructions: '' },
   ]);
+  const [patientPastHistory, setPatientPastHistory] = useState<any | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [issuingRx, setIssuingRx] = useState(false);
   const [rxError, setRxError] = useState<string | null>(null);
 
-  // 3. View Prescription Modal State
+  // 4. View Prescription Modal State
   const [viewRxModalAppt, setViewRxModalAppt] = useState<any | null>(null);
 
   const loadData = async (userDocId: string, filter: string) => {
     setLoading(true);
-    const [docRes, apptRes] = await Promise.all([
+    const [docRes, apptRes, allApptRes, leavesRes] = await Promise.all([
       getDoctorByIdAction(userDocId),
       getAppointmentsAction({
         status: filter !== 'ALL' ? (filter as any) : undefined,
         doctorId: userDocId,
-        limit: 20,
+        limit: 50,
       }),
+      // Fetch all for local queue counters
+      getAppointmentsAction({
+        doctorId: userDocId,
+        limit: 100,
+      }),
+      getDoctorLeavesAction(userDocId),
     ]);
+
     if (docRes.success && docRes.data) {
       setDoctorProfile(docRes.data);
       if (docRes.data.schedules) {
@@ -84,15 +141,51 @@ export default function DoctorDashboardPage() {
             dayOfWeek: s.dayOfWeek,
             startTime: s.startTime,
             endTime: s.endTime,
+            breakStartTime: s.breakStartTime || '',
+            breakEndTime: s.breakEndTime || '',
             slotDuration: s.slotDuration || 30,
             isActive: s.isActive ?? true,
           }))
         );
       }
     }
+
     if (apptRes.success && apptRes.data) {
       setAppointments(apptRes.data.appointments);
     }
+
+    if (allApptRes.success && allApptRes.data) {
+      const all = allApptRes.data.appointments;
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      const waiting = all.filter((a: any) => a.status === AppointmentStatus.CHECKED_IN).length;
+      const inProg = all.filter((a: any) => a.status === AppointmentStatus.IN_PROGRESS).length;
+      const upcoming = all.filter(
+        (a: any) =>
+          a.status === AppointmentStatus.CONFIRMED || a.status === AppointmentStatus.SCHEDULED
+      ).length;
+      const compToday = all.filter((a: any) => {
+        const dStr = new Date(a.appointmentDate).toISOString().split('T')[0];
+        return a.status === AppointmentStatus.COMPLETED && dStr === todayStr;
+      }).length;
+      const totToday = all.filter((a: any) => {
+        const dStr = new Date(a.appointmentDate).toISOString().split('T')[0];
+        return dStr === todayStr;
+      }).length;
+
+      setQueueMetrics({
+        waitingRoom: waiting,
+        inProgress: inProg,
+        upcoming,
+        completedToday: compToday,
+        totalToday: totToday,
+      });
+    }
+
+    if (leavesRes.success && leavesRes.data) {
+      setLeavesList(leavesRes.data);
+    }
+
     setLoading(false);
   };
 
@@ -111,7 +204,7 @@ export default function DoctorDashboardPage() {
     });
   }, [router]);
 
-  const handleFilterChange = (filter: 'ALL' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED') => {
+  const handleFilterChange = (filter: 'ALL' | 'CHECKED_IN' | 'IN_PROGRESS' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED') => {
     setStatusFilter(filter);
     if (currentUser?.doctorId) {
       loadData(currentUser.doctorId, filter);
@@ -122,7 +215,15 @@ export default function DoctorDashboardPage() {
   const handleAddScheduleDay = () => {
     setEditingSchedules((prev) => [
       ...prev,
-      { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', slotDuration: 30, isActive: true },
+      {
+        dayOfWeek: 1,
+        startTime: '09:00',
+        endTime: '17:00',
+        breakStartTime: '13:00',
+        breakEndTime: '14:00',
+        slotDuration: 30,
+        isActive: true,
+      },
     ]);
   };
 
@@ -142,22 +243,95 @@ export default function DoctorDashboardPage() {
       return;
     }
 
-    setToastMessage('Weekly working shifts successfully updated!');
+    setToastMessage('Weekly working shifts and break times updated successfully!');
     setIsScheduleModalOpen(false);
     setSavingSchedule(false);
     loadData(currentUser.doctorId, statusFilter);
   };
 
-  // --- Consultation & Prescription Handlers ---
-  const handleOpenConsultation = (appt: any) => {
+  // --- Doctor Leave Handlers ---
+  const handleAddLeave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser?.doctorId) return;
+    if (!leaveStartDate || !leaveEndDate) {
+      setLeaveError('Start date and end date are required.');
+      return;
+    }
+
+    setSavingLeave(true);
+    setLeaveError(null);
+    setLeaveConflictWarning(null);
+
+    const res = await addDoctorLeaveAction({
+      doctorId: currentUser.doctorId,
+      startDate: leaveStartDate,
+      endDate: leaveEndDate,
+      reason: leaveReason.trim() || 'Medical / Personal Leave',
+    });
+
+    if (!res.success) {
+      setLeaveError(res.message || 'Failed to record leave.');
+      setSavingLeave(false);
+      return;
+    }
+
+    if (res.data?.conflictedCount > 0) {
+      setLeaveConflictWarning(
+        `Leave scheduled! ${res.data.conflictedCount} conflicting appointment(s) were flagged and patients notified.`
+      );
+    } else {
+      setToastMessage('Leave scheduled successfully. Consultation slots have been temporarily blocked.');
+    }
+
+    setLeaveStartDate('');
+    setLeaveEndDate('');
+    setLeaveReason('');
+    setSavingLeave(false);
+    loadData(currentUser.doctorId, statusFilter);
+  };
+
+  const handleDeleteLeave = async (leaveId: string) => {
+    const res = await deleteDoctorLeaveAction(leaveId);
+    if (res.success) {
+      setToastMessage('Leave schedule cancelled.');
+      if (currentUser?.doctorId) {
+        loadData(currentUser.doctorId, statusFilter);
+      }
+    } else {
+      alert(res.message || 'Failed to cancel leave.');
+    }
+  };
+
+  // --- Clinical Consultation & Prescription Handlers ---
+  const handleStartConsultation = async (appt: any) => {
+    // 1. Transition status to IN_PROGRESS
+    if (appt.status !== AppointmentStatus.IN_PROGRESS) {
+      const res = await startConsultationAction(appt.id);
+      if (!res.success) {
+        setToastMessage(res.message || 'Could not start consultation.');
+        return;
+      }
+    }
+
+    // 2. Open Consultation modal with clinical findings & load history
     setActiveConsultationAppt(appt);
+    setRxSymptoms(appt.reason || '');
     setRxDiagnosis('');
     setRxNotes('');
+    setRxFollowUpDate('');
     setRxMedications([
       { name: '', dosage: '', frequency: 'Twice daily after meals', duration: '5 days', instructions: '' },
     ]);
     setRxError(null);
     setIsRxModalOpen(true);
+
+    // Fetch patient past history for clinical context
+    setLoadingHistory(true);
+    const histRes = await getPatientMedicalHistoryAction(appt.patientId);
+    if (histRes.success && histRes.data) {
+      setPatientPastHistory(histRes.data);
+    }
+    setLoadingHistory(false);
   };
 
   const handleAddMedication = () => {
@@ -184,7 +358,7 @@ export default function DoctorDashboardPage() {
     if (!activeConsultationAppt || !currentUser?.doctorId) return;
 
     if (!rxDiagnosis.trim()) {
-      setRxError('Diagnosis is required to complete consultation.');
+      setRxError('Clinical diagnosis is required to complete consultation.');
       return;
     }
 
@@ -201,35 +375,68 @@ export default function DoctorDashboardPage() {
       appointmentId: activeConsultationAppt.id,
       patientId: activeConsultationAppt.patientId,
       doctorId: currentUser.doctorId,
+      symptoms: rxSymptoms.trim() || undefined,
       diagnosis: rxDiagnosis.trim(),
       notes: rxNotes.trim() || undefined,
+      followUpDate: rxFollowUpDate || undefined,
       medications: validMeds,
     });
 
     if (!res.success) {
-      setRxError(res.message || 'Failed to issue prescription.');
+      setRxError(res.message || 'Failed to complete consultation and issue prescription.');
       setIssuingRx(false);
       return;
     }
 
     setToastMessage(
-      `Consultation completed! Prescription issued for patient ${activeConsultationAppt.patient?.user?.name || 'record'}.`
+      `Consultation completed! Prescription issued and hospital invoice automatically generated for ${
+        activeConsultationAppt.patient?.user?.name || 'patient'
+      }.`
     );
     setIsRxModalOpen(false);
     setIssuingRx(false);
     loadData(currentUser.doctorId, statusFilter);
   };
 
-  // --- Mark Appointment Status Handler ---
-  const handleUpdateStatus = async (apptId: string, status: AppointmentStatus) => {
-    const res = await updateAppointmentStatusAction(apptId, status);
+  // --- Mark Check-In (Patient Arrived) ---
+  const handleCheckIn = async (apptId: string) => {
+    const res = await checkInAppointmentAction(apptId);
     if (res.success) {
-      setToastMessage(`Appointment marked as ${status}.`);
+      setToastMessage('Patient marked as Checked In. Queued in waiting room.');
       if (currentUser?.doctorId) {
         loadData(currentUser.doctorId, statusFilter);
       }
     } else {
-      setToastMessage(res.message || 'Failed to update appointment status.');
+      setToastMessage(res.message || 'Failed to check in patient.');
+    }
+  };
+
+  // --- Mark No Show Handler ---
+  const handleMarkNoShow = async (apptId: string) => {
+    if (!confirm('Mark this patient appointment as No-Show?')) return;
+    const res = await markNoShowAction(apptId);
+    if (res.success) {
+      setToastMessage('Appointment marked as No-Show.');
+      if (currentUser?.doctorId) {
+        loadData(currentUser.doctorId, statusFilter);
+      }
+    } else {
+      setToastMessage(res.message || 'Failed to mark no-show.');
+    }
+  };
+
+  // --- Cancel Consultation Handler ---
+  const handleCancelAppt = async (apptId: string) => {
+    const reason = prompt('Please enter cancellation reason:');
+    if (reason === null) return;
+    const res = await cancelAppointmentAction({ appointmentId: apptId, reason });
+    if (res.success) {
+      setToastMessage('Appointment cancelled.');
+      if (currentUser?.doctorId) {
+        loadData(currentUser.doctorId, statusFilter);
+      }
+    } else {
+      setToastMessage(res.message || 'Failed to cancel.');
     }
   };
 
@@ -244,16 +451,22 @@ export default function DoctorDashboardPage() {
   return (
     <DashboardShell
       user={currentUser}
-      title={`Clinical Workstation • ${currentUser.name}`}
-      subtitle="Shift scheduling, patient intake queue, consultation room, and digital prescription issuance."
-      badge="Doctor Portal"
+      title={`Clinical Workstation • Dr. ${currentUser.name}`}
+      subtitle="Shift scheduling, break management, patient waiting room queue, and electronic prescription issuance."
+      badge="Physician Operations Desk"
       actionButton={
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsLeaveModalOpen(true)}
+            className="btn-secondary flex items-center gap-2 text-xs !py-2 !px-3"
+          >
+            <CalendarOff className="h-4 w-4 text-brand" /> Manage Leaves
+          </button>
           <button
             onClick={() => setIsScheduleModalOpen(true)}
             className="btn-secondary flex items-center gap-2 text-xs !py-2 !px-3"
           >
-            <Clock className="h-4 w-4 text-brand" /> Configure My Schedule
+            <Clock className="h-4 w-4 text-brand" /> Shifts & Breaks
           </button>
           <Link
             href="/medical-records"
@@ -280,7 +493,7 @@ export default function DoctorDashboardPage() {
         </div>
       )}
 
-      {/* Physician Info & Shift Timing Banner */}
+      {/* Top Banner: Physician Profile & Live Queue Stat Pills */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <div className="lg:col-span-2 bg-surface-dark text-white rounded-xl p-8 shadow-soft flex flex-col justify-between">
           <div>
@@ -291,11 +504,11 @@ export default function DoctorDashboardPage() {
                   {doctorProfile?.department?.name || 'Clinical Division'}
                 </span>
                 <h2 className="text-2xl font-normal tracking-tight text-white">
-                  {currentUser.name}
+                  Dr. {currentUser.name}
                 </h2>
                 <p className="text-sm text-muted-soft mt-1">
                   {doctorProfile?.specialization || 'Clinical Specialist'} •{' '}
-                  {doctorProfile?.qualification || 'MD'}
+                  {doctorProfile?.qualification || 'MD / MBBS'}
                 </p>
               </div>
 
@@ -304,13 +517,13 @@ export default function DoctorDashboardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-8 pt-6 border-t border-surface-dark-elevated text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-surface-dark-elevated text-xs">
               <div>
                 <div className="text-[10px] font-semibold uppercase text-muted tracking-wider">
                   Consultation Fee
                 </div>
                 <div className="text-lg font-bold text-semantic-up number-mono mt-0.5">
-                  ${Number(doctorProfile?.consultationFee || 0).toFixed(2)}
+                  {formatCurrency(doctorProfile?.consultationFee || 0)}
                 </div>
               </div>
 
@@ -325,39 +538,51 @@ export default function DoctorDashboardPage() {
 
               <div>
                 <div className="text-[10px] font-semibold uppercase text-muted tracking-wider">
-                  Department
+                  Waiting Room
                 </div>
-                <div className="text-sm font-semibold text-white mt-0.5 truncate">
-                  {doctorProfile?.department?.name || 'General Medicine'}
+                <div className="text-lg font-bold text-amber-400 number-mono mt-0.5 flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                  {queueMetrics.waitingRoom} Patient(s)
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[10px] font-semibold uppercase text-muted tracking-wider">
+                  Completed Today
+                </div>
+                <div className="text-lg font-bold text-emerald-400 number-mono mt-0.5">
+                  {queueMetrics.completedToday} Done
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="pt-6 mt-6 border-t border-surface-dark-elevated flex items-center justify-between">
+          <div className="pt-6 mt-6 border-t border-surface-dark-elevated flex items-center justify-between flex-wrap gap-2">
             <span className="text-xs text-muted-soft">
-              Weekly shift slots: 30-min intervals with concurrency lock
+              Active clinic queue: {queueMetrics.waitingRoom} waiting • {queueMetrics.inProgress} in exam room
             </span>
-            <button
-              onClick={() => setIsScheduleModalOpen(true)}
-              className="text-xs font-semibold text-brand hover:underline"
-            >
-              Modify Working Shifts &rarr;
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsLeaveModalOpen(true)}
+                className="text-xs font-semibold text-brand hover:underline"
+              >
+                Upcoming Leaves ({leavesList.length}) &rarr;
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Quick Shift Summary Card */}
+        {/* Quick Shift & Break Timetable Card */}
         <div className="bg-white rounded-xl border border-hairline p-6 shadow-soft space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-ink flex items-center gap-2">
-              <Clock className="h-4 w-4 text-brand" /> Duty Timetable
+              <Clock className="h-4 w-4 text-brand" /> Duty Shifts & Breaks
             </h3>
             <button
               onClick={() => setIsScheduleModalOpen(true)}
               className="text-xs text-brand font-semibold hover:underline"
             >
-              Edit
+              Configure
             </button>
           </div>
 
@@ -366,12 +591,22 @@ export default function DoctorDashboardPage() {
               {doctorProfile.schedules.map((s: any) => (
                 <div
                   key={s.id}
-                  className="p-2.5 rounded-lg bg-surface-soft border border-hairline flex items-center justify-between"
+                  className="p-2.5 rounded-lg bg-surface-soft border border-hairline flex flex-col gap-1"
                 >
-                  <span className="font-semibold text-ink">{DAYS_OF_WEEK[s.dayOfWeek]}</span>
-                  <span className="number-mono text-muted">
-                    {s.startTime} - {s.endTime} ({s.slotDuration}m)
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-ink">{DAYS_OF_WEEK[s.dayOfWeek]}</span>
+                    <span className="number-mono text-muted">
+                      {s.startTime} - {s.endTime}
+                    </span>
+                  </div>
+                  {s.breakStartTime && s.breakEndTime ? (
+                    <div className="flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                      <Coffee className="h-3 w-3 shrink-0" />
+                      <span>Break: {s.breakStartTime} - {s.breakEndTime}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-muted">No break scheduled</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -389,76 +624,146 @@ export default function DoctorDashboardPage() {
         </div>
       </div>
 
-      {/* Main Consultation Management & Queue */}
+      {/* Main Clinical Queue & Patient Intake Management */}
       <div className="bg-white rounded-xl border border-hairline shadow-soft overflow-hidden mb-10">
         <div className="p-6 border-b border-hairline flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-lg font-semibold text-ink flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-brand" /> Patient Consultation Queue
+              <Calendar className="h-5 w-5 text-brand" /> Clinical Patient Queue
             </h3>
             <p className="text-xs text-muted mt-0.5">
-              Review assigned patient visits, launch consultations, and record electronic prescriptions.
+              Manage patient arrival check-ins, launch exam consultations, and record electronic prescriptions with auto-billing.
             </p>
           </div>
 
-          {/* Status Filter Tabs */}
-          <div className="flex items-center gap-1.5 p-1 rounded-pill bg-surface-soft border border-hairline">
-            {(['ALL', 'CONFIRMED', 'COMPLETED', 'CANCELLED'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => handleFilterChange(tab)}
-                className={`px-3.5 py-1.5 rounded-pill text-xs font-semibold transition ${
-                  statusFilter === tab
-                    ? 'bg-white text-ink shadow-sm border border-hairline'
-                    : 'text-muted hover:text-ink'
-                }`}
-              >
-                {tab === 'CONFIRMED' ? 'Confirmed Queue' : tab}
-              </button>
-            ))}
+          {/* Operational Queue Filter Tabs */}
+          <div className="flex items-center gap-1 p-1 rounded-pill bg-surface-soft border border-hairline flex-wrap">
+            <button
+              onClick={() => handleFilterChange('CHECKED_IN')}
+              className={`px-3 py-1.5 rounded-pill text-xs font-semibold transition flex items-center gap-1.5 ${
+                statusFilter === 'CHECKED_IN'
+                  ? 'bg-amber-500 text-white shadow-sm'
+                  : 'text-muted hover:text-ink'
+              }`}
+            >
+              <span>Waiting Room</span>
+              {queueMetrics.waitingRoom > 0 && (
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  statusFilter === 'CHECKED_IN' ? 'bg-white text-amber-600' : 'bg-amber-100 text-amber-800'
+                }`}>
+                  {queueMetrics.waitingRoom}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => handleFilterChange('IN_PROGRESS')}
+              className={`px-3 py-1.5 rounded-pill text-xs font-semibold transition flex items-center gap-1.5 ${
+                statusFilter === 'IN_PROGRESS'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-muted hover:text-ink'
+              }`}
+            >
+              <span>In Examination</span>
+              {queueMetrics.inProgress > 0 && (
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  statusFilter === 'IN_PROGRESS' ? 'bg-white text-blue-600' : 'bg-blue-100 text-blue-800'
+                }`}>
+                  {queueMetrics.inProgress}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => handleFilterChange('CONFIRMED')}
+              className={`px-3 py-1.5 rounded-pill text-xs font-semibold transition ${
+                statusFilter === 'CONFIRMED'
+                  ? 'bg-white text-ink shadow-sm border border-hairline'
+                  : 'text-muted hover:text-ink'
+              }`}
+            >
+              Upcoming ({queueMetrics.upcoming})
+            </button>
+
+            <button
+              onClick={() => handleFilterChange('COMPLETED')}
+              className={`px-3 py-1.5 rounded-pill text-xs font-semibold transition ${
+                statusFilter === 'COMPLETED'
+                  ? 'bg-white text-ink shadow-sm border border-hairline'
+                  : 'text-muted hover:text-ink'
+              }`}
+            >
+              Completed
+            </button>
+
+            <button
+              onClick={() => handleFilterChange('ALL')}
+              className={`px-3 py-1.5 rounded-pill text-xs font-semibold transition ${
+                statusFilter === 'ALL'
+                  ? 'bg-white text-ink shadow-sm border border-hairline'
+                  : 'text-muted hover:text-ink'
+              }`}
+            >
+              All Appointments
+            </button>
           </div>
         </div>
 
         {loading ? (
           <div className="py-16 text-center text-sm text-muted">
-            Loading consultations queue...
+            Updating clinical patient queue...
           </div>
         ) : appointments.length === 0 ? (
           <div className="py-16 text-center text-sm text-body space-y-2">
             <Calendar className="h-8 w-8 text-muted mx-auto" />
-            <div className="font-semibold text-ink">No appointments in this category.</div>
+            <div className="font-semibold text-ink">No appointments in this view.</div>
             <p className="text-xs text-muted">
-              {statusFilter === 'CONFIRMED'
-                ? 'All consultations are up-to-date! No pending patient visits waiting.'
-                : 'No appointment records found.'}
+              {statusFilter === 'CHECKED_IN'
+                ? 'No patients waiting in the clinic lobby right now.'
+                : statusFilter === 'IN_PROGRESS'
+                ? 'No consultation is currently underway.'
+                : 'No appointment records match the selected queue filter.'}
             </p>
           </div>
         ) : (
           <div className="divide-y divide-hairline">
             {appointments.map((appt) => {
               const apptDateStr = new Date(appt.appointmentDate).toISOString().split('T')[0];
-              const isConfirmed = appt.status === 'CONFIRMED';
-              const isCompleted = appt.status === 'COMPLETED';
+              const isCheckedIn = appt.status === AppointmentStatus.CHECKED_IN;
+              const isInProgress = appt.status === AppointmentStatus.IN_PROGRESS;
+              const isConfirmed = appt.status === AppointmentStatus.CONFIRMED || appt.status === AppointmentStatus.SCHEDULED;
+              const isCompleted = appt.status === AppointmentStatus.COMPLETED;
 
               return (
                 <div
                   key={appt.id}
-                  className="p-6 hover:bg-surface-soft transition flex flex-col md:flex-row md:items-center justify-between gap-6"
+                  className={`p-6 hover:bg-surface-soft transition flex flex-col md:flex-row md:items-center justify-between gap-6 ${
+                    isCheckedIn ? 'bg-amber-50/30 border-l-4 border-l-amber-500' : ''
+                  } ${isInProgress ? 'bg-blue-50/30 border-l-4 border-l-blue-600' : ''}`}
                 >
-                  {/* Left: Patient & Appointment Details */}
+                  {/* Left: Patient & Clinical Info */}
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span
-                        className={`badge-pill text-[10px] ${
-                          appt.status === 'CONFIRMED'
-                            ? '!bg-emerald-50 !text-emerald-700 !border-emerald-200'
-                            : appt.status === 'COMPLETED'
-                            ? '!bg-blue-50 !text-brand !border-blue-200'
+                        className={`badge-pill text-[10px] font-bold ${
+                          isCheckedIn
+                            ? '!bg-amber-100 !text-amber-800 !border-amber-300'
+                            : isInProgress
+                            ? '!bg-blue-100 !text-blue-800 !border-blue-300'
+                            : isConfirmed
+                            ? '!bg-slate-100 !text-slate-800 !border-slate-300'
+                            : isCompleted
+                            ? '!bg-emerald-100 !text-emerald-800 !border-emerald-300'
                             : '!bg-red-50 !text-semantic-down !border-red-200'
                         }`}
                       >
-                        {appt.status}
+                        {isCheckedIn
+                          ? 'WAITING IN CLINIC'
+                          : isInProgress
+                          ? 'IN EXAMINATION'
+                          : appt.status}
                       </span>
+
                       <span className="text-xs font-semibold text-ink number-mono">
                         {apptDateStr} at {appt.timeSlot}
                       </span>
@@ -502,19 +807,49 @@ export default function DoctorDashboardPage() {
                     )}
                   </div>
 
-                  {/* Right: Clinical Action Buttons */}
+                  {/* Right: Operational Clinical Actions */}
                   <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                    {/* Launch Consultation & Write Rx */}
+                    {/* Patient Arrived: Check In */}
                     {isConfirmed && (
                       <button
-                        onClick={() => handleOpenConsultation(appt)}
-                        className="btn-primary !py-2 !px-4 !text-xs flex items-center gap-1.5 shadow-sm"
+                        onClick={() => handleCheckIn(appt.id)}
+                        className="btn-secondary !py-2 !px-3 !text-xs flex items-center gap-1.5"
                       >
-                        <Pill className="h-3.5 w-3.5" /> Start & Prescribe
+                        <UserCheck className="h-3.5 w-3.5 text-brand" /> Patient Arrived
                       </button>
                     )}
 
-                    {/* View Prescription */}
+                    {/* Waiting Room Patient: Start Consultation */}
+                    {isCheckedIn && (
+                      <button
+                        onClick={() => handleStartConsultation(appt)}
+                        className="px-4 py-2 rounded-pill bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition"
+                      >
+                        <PlayCircle className="h-4 w-4" /> Start Consultation
+                      </button>
+                    )}
+
+                    {/* In Progress Consultation: Complete or Resume */}
+                    {isInProgress && (
+                      <button
+                        onClick={() => handleStartConsultation(appt)}
+                        className="btn-primary !py-2 !px-4 !text-xs flex items-center gap-1.5 shadow-sm"
+                      >
+                        <Pill className="h-3.5 w-3.5" /> Resume & Prescribe
+                      </button>
+                    )}
+
+                    {/* Confirmed Direct Consultation Launcher */}
+                    {isConfirmed && (
+                      <button
+                        onClick={() => handleStartConsultation(appt)}
+                        className="btn-primary !py-2 !px-4 !text-xs flex items-center gap-1.5 shadow-sm"
+                      >
+                        <PlayCircle className="h-3.5 w-3.5" /> Start Consultation
+                      </button>
+                    )}
+
+                    {/* Completed: View Prescription */}
                     {appt.prescription && (
                       <button
                         onClick={() => setViewRxModalAppt(appt)}
@@ -533,9 +868,9 @@ export default function DoctorDashboardPage() {
                     </Link>
 
                     {/* Mark No Show */}
-                    {isConfirmed && (
+                    {(isConfirmed || isCheckedIn) && (
                       <button
-                        onClick={() => handleUpdateStatus(appt.id, 'NO_SHOW')}
+                        onClick={() => handleMarkNoShow(appt.id)}
                         className="px-3 py-2 rounded-pill border border-hairline text-muted hover:text-ink text-xs font-semibold transition"
                       >
                         No Show
@@ -545,7 +880,7 @@ export default function DoctorDashboardPage() {
                     {/* Cancel consultation */}
                     {isConfirmed && (
                       <button
-                        onClick={() => handleUpdateStatus(appt.id, 'CANCELLED')}
+                        onClick={() => handleCancelAppt(appt.id)}
                         className="px-3 py-2 rounded-pill border border-red-200 text-semantic-down hover:bg-red-50 text-xs font-semibold transition"
                       >
                         Cancel
@@ -559,13 +894,13 @@ export default function DoctorDashboardPage() {
         )}
       </div>
 
-      {/* MODAL 1: Schedule Configuration Modal */}
+      {/* MODAL 1: Schedule & Break Times Configuration Modal */}
       <Modal
         isOpen={isScheduleModalOpen}
         onClose={() => setIsScheduleModalOpen(false)}
-        title="Configure Weekly Working Shifts"
-        subtitle="Set active consultation days, shift timings, and slot duration intervals."
-        maxWidth="lg"
+        title="Configure Shifts & Break Times"
+        subtitle="Define active shift hours, daily break intervals (e.g. lunch hour), and slot duration."
+        maxWidth="xl"
       >
         <div className="space-y-6">
           {scheduleError && (
@@ -584,102 +919,145 @@ export default function DoctorDashboardPage() {
               editingSchedules.map((schedule, idx) => (
                 <div
                   key={idx}
-                  className="p-4 rounded-xl border border-hairline bg-surface-soft grid grid-cols-1 sm:grid-cols-12 gap-3 items-center"
+                  className="p-4 rounded-xl border border-hairline bg-surface-soft space-y-3"
                 >
-                  <div className="sm:col-span-3">
-                    <label className="block text-[10px] font-semibold uppercase text-muted mb-1">
-                      Day of Week
-                    </label>
-                    <select
-                      value={schedule.dayOfWeek}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        setEditingSchedules((prev) => {
-                          const next = [...prev];
-                          next[idx].dayOfWeek = val;
-                          return next;
-                        });
-                      }}
-                      className="text-input-md w-full !py-1.5 text-xs font-medium"
-                    >
-                      {DAYS_OF_WEEK.map((day, dIdx) => (
-                        <option key={dIdx} value={dIdx}>
-                          {day}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                    <div className="sm:col-span-3">
+                      <label className="block text-[10px] font-semibold uppercase text-muted mb-1">
+                        Day of Week
+                      </label>
+                      <select
+                        value={schedule.dayOfWeek}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          setEditingSchedules((prev) => {
+                            const next = [...prev];
+                            next[idx].dayOfWeek = val;
+                            return next;
+                          });
+                        }}
+                        className="text-input-md w-full !py-1.5 text-xs font-medium"
+                      >
+                        {DAYS_OF_WEEK.map((day, dIdx) => (
+                          <option key={dIdx} value={dIdx}>
+                            {day}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label className="block text-[10px] font-semibold uppercase text-muted mb-1">
+                        Shift Start
+                      </label>
+                      <input
+                        type="time"
+                        value={schedule.startTime}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEditingSchedules((prev) => {
+                            const next = [...prev];
+                            next[idx].startTime = val;
+                            return next;
+                          });
+                        }}
+                        className="text-input-md w-full !py-1.5 text-xs font-medium number-mono"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label className="block text-[10px] font-semibold uppercase text-muted mb-1">
+                        Shift End
+                      </label>
+                      <input
+                        type="time"
+                        value={schedule.endTime}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEditingSchedules((prev) => {
+                            const next = [...prev];
+                            next[idx].endTime = val;
+                            return next;
+                          });
+                        }}
+                        className="text-input-md w-full !py-1.5 text-xs font-medium number-mono"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-[10px] font-semibold uppercase text-muted mb-1">
+                        Slot Duration
+                      </label>
+                      <select
+                        value={schedule.slotDuration}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          setEditingSchedules((prev) => {
+                            const next = [...prev];
+                            next[idx].slotDuration = val;
+                            return next;
+                          });
+                        }}
+                        className="text-input-md w-full !py-1.5 text-xs font-medium"
+                      >
+                        <option value={15}>15 min</option>
+                        <option value={30}>30 min</option>
+                        <option value={45}>45 min</option>
+                        <option value={60}>60 min</option>
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-1 flex justify-center pt-4 sm:pt-0">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveScheduleDay(idx)}
+                        title="Remove Shift"
+                        className="p-1.5 text-muted hover:text-semantic-down rounded-lg transition"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="sm:col-span-3">
-                    <label className="block text-[10px] font-semibold uppercase text-muted mb-1">
-                      Start Time
-                    </label>
-                    <input
-                      type="time"
-                      value={schedule.startTime}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setEditingSchedules((prev) => {
-                          const next = [...prev];
-                          next[idx].startTime = val;
-                          return next;
-                        });
-                      }}
-                      className="text-input-md w-full !py-1.5 text-xs font-medium number-mono"
-                    />
-                  </div>
+                  {/* Break Time Inputs */}
+                  <div className="pt-2 border-t border-hairline/60 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white/60 p-2.5 rounded-lg">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-amber-800 uppercase flex items-center gap-1 mb-1">
+                        <Coffee className="h-3 w-3" /> Break Start (e.g. Lunch)
+                      </label>
+                      <input
+                        type="time"
+                        value={schedule.breakStartTime || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEditingSchedules((prev) => {
+                            const next = [...prev];
+                            next[idx].breakStartTime = val;
+                            return next;
+                          });
+                        }}
+                        className="text-input-md w-full !py-1 text-xs number-mono"
+                      />
+                    </div>
 
-                  <div className="sm:col-span-3">
-                    <label className="block text-[10px] font-semibold uppercase text-muted mb-1">
-                      End Time
-                    </label>
-                    <input
-                      type="time"
-                      value={schedule.endTime}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setEditingSchedules((prev) => {
-                          const next = [...prev];
-                          next[idx].endTime = val;
-                          return next;
-                        });
-                      }}
-                      className="text-input-md w-full !py-1.5 text-xs font-medium number-mono"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block text-[10px] font-semibold uppercase text-muted mb-1">
-                      Slot Duration
-                    </label>
-                    <select
-                      value={schedule.slotDuration}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        setEditingSchedules((prev) => {
-                          const next = [...prev];
-                          next[idx].slotDuration = val;
-                          return next;
-                        });
-                      }}
-                      className="text-input-md w-full !py-1.5 text-xs font-medium"
-                    >
-                      <option value={15}>15 min</option>
-                      <option value={30}>30 min</option>
-                      <option value={45}>45 min</option>
-                      <option value={60}>60 min</option>
-                    </select>
-                  </div>
-
-                  <div className="sm:col-span-1 flex justify-center pt-4 sm:pt-0">
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveScheduleDay(idx)}
-                      title="Remove Shift"
-                      className="p-1.5 text-muted hover:text-semantic-down rounded-lg transition"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-amber-800 uppercase flex items-center gap-1 mb-1">
+                        <Coffee className="h-3 w-3" /> Break End
+                      </label>
+                      <input
+                        type="time"
+                        value={schedule.breakEndTime || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEditingSchedules((prev) => {
+                            const next = [...prev];
+                            next[idx].breakEndTime = val;
+                            return next;
+                          });
+                        }}
+                        className="text-input-md w-full !py-1 text-xs number-mono"
+                      />
+                    </div>
                   </div>
                 </div>
               ))
@@ -709,19 +1087,157 @@ export default function DoctorDashboardPage() {
                 disabled={savingSchedule}
                 className="btn-primary !py-2 !px-5 text-xs"
               >
-                {savingSchedule ? 'Saving Schedule...' : 'Save Shifts'}
+                {savingSchedule ? 'Saving Schedule...' : 'Save Shifts & Breaks'}
               </button>
             </div>
           </div>
         </div>
       </Modal>
 
-      {/* MODAL 2: Interactive Consultation & Digital Prescription Builder */}
+      {/* MODAL 2: Doctor Leave Management Modal */}
+      <Modal
+        isOpen={isLeaveModalOpen}
+        onClose={() => setIsLeaveModalOpen(false)}
+        title="Physician Leave & Unavailability Desk"
+        subtitle="Schedule personal leave or conference absence. Conflicting booked patient slots will be automatically flagged."
+        maxWidth="lg"
+      >
+        <div className="space-y-6">
+          {leaveError && (
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-semantic-down text-xs flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{leaveError}</span>
+            </div>
+          )}
+
+          {leaveConflictWarning && (
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+              <span>{leaveConflictWarning}</span>
+            </div>
+          )}
+
+          {/* New Leave Schedule Form */}
+          <form onSubmit={handleAddLeave} className="p-4 rounded-xl border border-hairline bg-surface-soft space-y-4">
+            <h4 className="text-xs font-bold uppercase text-ink tracking-wider">
+              Schedule New Leave Period
+            </h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-semibold uppercase text-muted mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={leaveStartDate}
+                  onChange={(e) => setLeaveStartDate(e.target.value)}
+                  className="text-input-md w-full !py-1.5 text-xs font-medium number-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold uppercase text-muted mb-1">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={leaveEndDate}
+                  onChange={(e) => setLeaveEndDate(e.target.value)}
+                  className="text-input-md w-full !py-1.5 text-xs font-medium number-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-semibold uppercase text-muted mb-1">
+                Reason / Note
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Annual Medical Conference, Personal Leave"
+                value={leaveReason}
+                onChange={(e) => setLeaveReason(e.target.value)}
+                className="text-input-md w-full !py-1.5 text-xs font-medium"
+              />
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <button
+                type="submit"
+                disabled={savingLeave}
+                className="btn-primary !py-2 !px-4 text-xs flex items-center gap-1.5"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {savingLeave ? 'Recording Leave...' : 'Apply Leave Period'}
+              </button>
+            </div>
+          </form>
+
+          {/* Existing Leaves List */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold uppercase text-ink tracking-wider">
+              Active & Upcoming Leave Records
+            </h4>
+
+            {leavesList.length === 0 ? (
+              <div className="p-6 text-center text-xs text-muted bg-surface-soft rounded-xl">
+                No leave periods currently registered.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {leavesList.map((leave) => {
+                  const sStr = new Date(leave.startDate).toISOString().split('T')[0];
+                  const eStr = new Date(leave.endDate).toISOString().split('T')[0];
+
+                  return (
+                    <div
+                      key={leave.id}
+                      className="p-3.5 rounded-xl border border-hairline bg-white flex items-center justify-between gap-4"
+                    >
+                      <div>
+                        <div className="text-xs font-semibold text-ink flex items-center gap-2">
+                          <CalendarOff className="h-3.5 w-3.5 text-brand" />
+                          <span className="number-mono">
+                            {sStr} to {eStr}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-muted mt-0.5">{leave.reason}</div>
+                      </div>
+
+                      <button
+                        onClick={() => handleDeleteLeave(leave.id)}
+                        className="p-1.5 text-muted hover:text-semantic-down rounded-lg transition"
+                        title="Cancel this leave"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-hairline flex justify-end">
+            <button
+              onClick={() => setIsLeaveModalOpen(false)}
+              className="btn-secondary !py-2 !px-4 text-xs"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* MODAL 3: Interactive Consultation & Clinical Findings Desk */}
       <Modal
         isOpen={isRxModalOpen}
         onClose={() => setIsRxModalOpen(false)}
-        title="Clinical Consultation & Prescription"
-        subtitle={`Recording diagnosis and electronic prescription for ${activeConsultationAppt?.patient?.user?.name || 'Patient'}.`}
+        title="Clinical Consultation & Electronic Prescription"
+        subtitle={`Examining ${activeConsultationAppt?.patient?.user?.name || 'Patient'} • Auto-generates itemized hospital bill upon completion.`}
         maxWidth="xl"
       >
         <form onSubmit={handleSubmitPrescription} className="space-y-6">
@@ -732,7 +1248,7 @@ export default function DoctorDashboardPage() {
             </div>
           )}
 
-          {/* Patient Quick Medical Summary Banner */}
+          {/* Patient Quick Summary Banner */}
           <div className="p-4 rounded-xl bg-surface-soft border border-hairline flex flex-wrap items-center justify-between gap-4 text-xs">
             <div>
               <span className="text-muted uppercase font-semibold text-[10px]">Patient Name</span>
@@ -760,6 +1276,43 @@ export default function DoctorDashboardPage() {
             </div>
           </div>
 
+          {/* Past EHR History Accordion */}
+          {patientPastHistory && patientPastHistory.prescriptions?.length > 0 && (
+            <div className="p-3.5 rounded-xl bg-blue-50/50 border border-blue-200 text-xs space-y-2">
+              <div className="font-semibold text-ink flex items-center gap-1.5">
+                <History className="h-4 w-4 text-brand" />
+                <span>Patient Medical History ({patientPastHistory.prescriptions.length} past visits)</span>
+              </div>
+              <div className="max-h-28 overflow-y-auto space-y-1.5 pr-2">
+                {patientPastHistory.prescriptions.slice(0, 3).map((p: any) => (
+                  <div key={p.id} className="p-2 rounded bg-white border border-blue-100 flex items-center justify-between">
+                    <div>
+                      <span className="font-semibold text-ink">{p.diagnosis}</span>
+                      <span className="text-muted ml-2">by Dr. {p.doctor?.user?.name}</span>
+                    </div>
+                    <span className="text-muted number-mono">
+                      {new Date(p.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Symptoms & Chief Complaints */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-ink mb-1.5">
+              Symptoms / Chief Complaints
+            </label>
+            <textarea
+              rows={2}
+              value={rxSymptoms}
+              onChange={(e) => setRxSymptoms(e.target.value)}
+              placeholder="e.g. High fever for 3 days, persistent dry cough, fatigue..."
+              className="text-input-md w-full resize-none"
+            />
+          </div>
+
           {/* Clinical Diagnosis Input */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-ink mb-1.5">
@@ -775,18 +1328,32 @@ export default function DoctorDashboardPage() {
             />
           </div>
 
-          {/* Clinical Observations & Advice */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-ink mb-1.5">
-              Physician Notes & Clinical Advice
-            </label>
-            <textarea
-              rows={2}
-              value={rxNotes}
-              onChange={(e) => setRxNotes(e.target.value)}
-              placeholder="Dietary instructions, follow-up recommendations, or clinical observations..."
-              className="text-input-md w-full resize-none"
-            />
+          {/* Clinical Notes & Follow-Up Date in 2 columns */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-ink mb-1.5">
+                Physician Notes & Clinical Advice
+              </label>
+              <input
+                type="text"
+                value={rxNotes}
+                onChange={(e) => setRxNotes(e.target.value)}
+                placeholder="Dietary instructions, rest recommendations, or special tests..."
+                className="text-input-md w-full"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-ink mb-1.5">
+                Follow-up Date
+              </label>
+              <input
+                type="date"
+                value={rxFollowUpDate}
+                onChange={(e) => setRxFollowUpDate(e.target.value)}
+                className="text-input-md w-full number-mono"
+              />
+            </div>
           </div>
 
           {/* Prescribed Medications Dynamic Array */}
@@ -872,9 +1439,9 @@ export default function DoctorDashboardPage() {
           </div>
 
           {/* Modal Footer Actions */}
-          <div className="pt-4 border-t border-hairline flex items-center justify-between">
+          <div className="pt-4 border-t border-hairline flex items-center justify-between flex-wrap gap-2">
             <span className="text-xs text-muted">
-              Issuing prescription will automatically mark consultation as COMPLETED.
+              Issuing prescription will automatically mark consultation as COMPLETED and generate hospital bill.
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -890,14 +1457,14 @@ export default function DoctorDashboardPage() {
                 className="btn-primary !py-2 !px-5 text-xs flex items-center gap-1.5"
               >
                 <CheckCircle2 className="h-4 w-4" />
-                {issuingRx ? 'Issuing Prescription...' : 'Complete & Issue Prescription'}
+                {issuingRx ? 'Finalizing Consultation...' : 'Complete Consultation & Generate Bill'}
               </button>
             </div>
           </div>
         </form>
       </Modal>
 
-      {/* MODAL 3: View Prescription Modal */}
+      {/* MODAL 4: View Prescription Modal */}
       <Modal
         isOpen={!!viewRxModalAppt}
         onClose={() => setViewRxModalAppt(null)}
@@ -912,6 +1479,12 @@ export default function DoctorDashboardPage() {
         {viewRxModalAppt?.prescription ? (
           <div className="space-y-6 text-sm">
             <div className="p-4 rounded-xl bg-surface-soft border border-hairline space-y-2">
+              {viewRxModalAppt.prescription.symptoms && (
+                <div className="text-xs text-body pb-2 border-b border-hairline">
+                  <span className="font-semibold text-ink">Chief Complaints / Symptoms:</span>{' '}
+                  {viewRxModalAppt.prescription.symptoms}
+                </div>
+              )}
               <div className="text-xs uppercase font-semibold text-muted">Clinical Diagnosis</div>
               <div className="text-base font-semibold text-ink">
                 {viewRxModalAppt.prescription.diagnosis}
@@ -920,6 +1493,14 @@ export default function DoctorDashboardPage() {
                 <div className="text-xs text-body pt-1 border-t border-hairline">
                   <span className="font-semibold text-ink">Physician Advice:</span>{' '}
                   {viewRxModalAppt.prescription.notes}
+                </div>
+              )}
+              {viewRxModalAppt.prescription.followUpDate && (
+                <div className="text-xs text-brand font-medium pt-1">
+                  Follow-up Consultation Recommended:{' '}
+                  <span className="font-bold number-mono">
+                    {new Date(viewRxModalAppt.prescription.followUpDate).toLocaleDateString()}
+                  </span>
                 </div>
               )}
             </div>

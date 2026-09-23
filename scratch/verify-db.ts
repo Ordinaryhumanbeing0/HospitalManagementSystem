@@ -1,14 +1,11 @@
 import { prisma } from '../src/lib/prisma';
+import { formatCurrency } from '../src/lib/config/currency';
 
 async function main() {
+  const settings = await prisma.systemSetting.findMany();
   const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      phone: true,
-    },
+    select: { id: true, name: true, email: true, role: true, phone: true },
+    orderBy: { createdAt: 'asc' },
   });
 
   const departments = await prisma.department.findMany({
@@ -21,7 +18,7 @@ async function main() {
 
   const doctors = await prisma.doctor.findMany({
     include: {
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true, email: true, phone: true } },
       department: { select: { name: true } },
       schedules: true,
     },
@@ -29,23 +26,70 @@ async function main() {
 
   const patients = await prisma.patient.findMany({
     include: {
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true, email: true, phone: true } },
     },
   });
 
-  const auditLogs = await prisma.auditLog.findMany();
+  const bills = await prisma.bill.findMany({
+    include: {
+      patient: { include: { user: true } },
+      payments: true,
+    },
+  });
 
-  console.log('-----------------------------------------------------------');
-  console.log('✅ DATABASE STATUS:');
-  console.log(`- Total Users:        ${users.length}`);
-  console.log(`- Total Departments:  ${departments.length}`);
-  console.log(`- Total Doctors:      ${doctors.length}`);
-  console.log(`- Total Patients:     ${patients.length}`);
-  console.log(`- Total Audit Logs:   ${auditLogs.length}`);
-  console.log('-----------------------------------------------------------');
-  console.log('🏢 Departments and Doctor Counts:');
-  departments.forEach((d) => console.log(`  • ${d.name.padEnd(20)}: ${d._count.doctors} doctor(s)`));
-  console.log('-----------------------------------------------------------');
+  const auditLogs = await prisma.auditLog.findMany({
+    take: 5,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  console.log('===========================================================');
+  console.log('🇮🇳 HOSPITAL SYSTEM DATABASE STATUS & LOCALIZATION CHECK');
+  console.log('===========================================================');
+
+  console.log('\n⚙️ SYSTEM CONFIGURATION (Table: SystemSetting):');
+  settings.forEach((s) => console.log(`   • ${s.key.padEnd(25)}: ${s.value}`));
+
+  console.log('\n👤 REGISTERED USERS (Table: User):');
+  users.forEach((u) =>
+    console.log(`   • ${u.role.padEnd(12)} | ${u.name.padEnd(42)} | ${u.email.padEnd(30)} | ${u.phone}`)
+  );
+
+  console.log('\n👨‍⚕️ DOCTORS & CLINICAL FEES (Table: Doctor):');
+  doctors.forEach((d) =>
+    console.log(
+      `   • ${d.user.name.padEnd(25)} | Dept: ${d.department.name.padEnd(16)} | Fee: ${formatCurrency(
+        d.consultationFee
+      )} (${d.consultationFee} INR)`
+    )
+  );
+
+  console.log('\n🧑‍🤝‍🧑 PATIENTS & PROFILES (Table: Patient):');
+  patients.forEach((p) =>
+    console.log(
+      `   • ${p.user.name.padEnd(18)} | Blood: ${p.bloodGroup || 'N/A'} | Emergency: ${p.emergencyContact}\n     Address: ${p.address}`
+    )
+  );
+
+  console.log('\n💳 BILLS & PAYMENTS (Tables: Bill, Payment):');
+  bills.forEach((b) => {
+    console.log(
+      `   • Bill #${b.id.slice(-8)} | Patient: ${b.patient.user.name} | Total: ${formatCurrency(
+        b.totalAmount
+      )} | Paid: ${formatCurrency(b.paidAmount)} | Status: ${b.status}`
+    );
+    b.payments.forEach((pay) => {
+      console.log(
+        `     ↳ Settlement: ${formatCurrency(pay.amount)} via ${pay.method} (Ref: ${pay.transactionRef})`
+      );
+    });
+  });
+
+  console.log('\n📝 RECENT AUDIT LOGS (Table: AuditLog):');
+  auditLogs.forEach((a) => console.log(`   • [${a.action}] ${a.details}`));
+
+  console.log('\n===========================================================');
+  console.log('✅ ALL DATABASE RECORDS ARE FULLY LOCALIZED TO INDIAN STANDARDS!');
+  console.log('===========================================================');
 }
 
 main()

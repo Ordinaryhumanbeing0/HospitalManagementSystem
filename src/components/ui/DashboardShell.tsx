@@ -24,7 +24,7 @@ export function DashboardShell({
       <Navbar user={user} />
 
       {/* Page Header Band */}
-      <div className="border-b border-hairline bg-surface-soft py-10">
+      <div className="border-b border-hairline bg-surface-soft py-6 sm:py-7">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>

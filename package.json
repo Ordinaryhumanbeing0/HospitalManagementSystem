@@ -11,7 +11,9 @@
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
-    "db:test": "node scratch/test-connection.mjs"
+    "db:test": "node scratch/test-connection.mjs",
+    "db:backup": "tsx scripts/backup-db.ts",
+    "db:restore": "tsx scripts/restore-db.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

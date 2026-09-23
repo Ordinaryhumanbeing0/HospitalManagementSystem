@@ -16,10 +16,14 @@ enum Role {
 }
 
 enum AppointmentStatus {
+  SCHEDULED
   PENDING
   CONFIRMED
+  CHECKED_IN
+  IN_PROGRESS
   COMPLETED
   CANCELLED
+  RESCHEDULED
   NO_SHOW
 }
 
@@ -28,6 +32,7 @@ enum PaymentStatus {
   PARTIALLY_PAID
   PAID
   REFUNDED
+  CANCELLED
 }
 
 enum PaymentMethod {
@@ -49,6 +54,7 @@ model User {
   role         Role     @default(PATIENT)
   name         String
   phone        String?
+  isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -81,7 +87,9 @@ model Doctor {
   specialization  String
   qualification   String
   consultationFee Decimal          @db.Decimal(10, 2)
+  isActive        Boolean          @default(true)
   schedules       DoctorSchedule[]
+  leaves          DoctorLeave[]
   appointments    Appointment[]
   medicalReports  MedicalReport[]
   prescriptions   Prescription[]
@@ -130,18 +138,33 @@ model AuditLog {
 // ----------------------------------------------------
 
 model DoctorSchedule {
-  id           String   @id @default(cuid())
-  doctorId     String
-  doctor       Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-  dayOfWeek    Int      // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  startTime    String   // e.g. "09:00"
-  endTime      String   // e.g. "17:00"
-  slotDuration Int      @default(30) // in minutes
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default(cuid())
+  doctorId       String
+  doctor         Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  dayOfWeek      Int      // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  startTime      String   // e.g. "09:00"
+  endTime        String   // e.g. "17:00"
+  breakStartTime String?  // e.g. "13:00"
+  breakEndTime   String?  // e.g. "14:00"
+  slotDuration   Int      @default(30) // in minutes
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([doctorId])
+}
+
+model DoctorLeave {
+  id        String   @id @default(cuid())
+  doctorId  String
+  doctor    Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([doctorId])
+  @@index([startDate, endDate])
 }
 
 model Appointment {
@@ -159,7 +182,7 @@ model Appointment {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
-  @@unique([doctorId, appointmentDate, timeSlot])
+  @@index([doctorId, appointmentDate, timeSlot])
   @@index([patientId])
   @@index([doctorId])
   @@index([appointmentDate])
@@ -174,8 +197,10 @@ model Prescription {
   doctorId      String
   doctor        Doctor      @relation(fields: [doctorId], references: [id])
   diagnosis     String
+  symptoms      String?
   notes         String?
-  medications   Json        // Array of { name, dosage, frequency, duration }
+  followUpDate  DateTime?   @db.Date
+  medications   Json        // Array of { name, dosage, frequency, duration, instructions }
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -242,3 +267,15 @@ model Notification {
 
   @@index([userId])
 }
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+}
+
