@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "checkmyvibe",
+  "version": "1.2.0",
+  "description": "A structured production readiness and code quality workflow Agent Skill for AI coding assistants to catch common vibe-coded configuration issues.",
+  "main": "install.js",
+  "bin": {
+    "checkmyvibe": "install.js"
+  },
+  "files": [
+    "SKILL.md",
+    "commands/",
+    "scripts/",
+    "references/",
+    "adapters/",
+    "install.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": [
+    "ai-agent",
+    "code-quality",
+    "production-readiness",
+    "claude-code",
+    "cursor",
+    "vibe-coding",
+    "agent-skill"
+  ],
+  "author": "Sarthak",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sarthakpatil23/checkmyvibe.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Sarthakpatil23/checkmyvibe/issues"
+  },
+  "homepage": "https://github.com/Sarthakpatil23/checkmyvibe#readme"
+}

@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "checkmyvibe": {
+      "source": "Sarthakpatil23/checkmyvibe",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "d9d31150e7a2815dab876ab5ed66596cd769df23f023d6a18d68b5bf54867bcd"
+    },
     "neon": {
       "source": "neondatabase/agent-skills",
       "sourceType": "github",

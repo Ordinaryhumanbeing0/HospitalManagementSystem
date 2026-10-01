@@ -1,0 +1,18 @@
+---
+description: checkmyvibe production readiness audit trigger and entry point
+globs:
+alwaysApply: true
+---
+
+# checkmyvibe (production readiness & code quality audit)
+
+When the user asks to "check my vibe", run a production readiness check, review code quality, do a pre-ship sanity check, check for exposed environment variables, check launch readiness, or asks for a scoped check (`secrets`, `auth`, `db`, `backend`, `frontend`, `payment`) — use the checkmyvibe skill.
+
+Locate its instructions file `SKILL.md` by checking, in order:
+1. `.claude/skills/checkmyvibe/SKILL.md`
+2. `~/.claude/skills/checkmyvibe/SKILL.md`
+3. Search the repo for a `SKILL.md` whose frontmatter contains `name: checkmyvibe`
+
+Read it fully and follow every instruction: scope selection, all applicable checks, evidence/confidence rules, severity rubric, report format, and final summary. If no scope is specified, run the full audit (all checks). Scopes map to checks exactly as defined in SKILL.md's "Scope selection" table.
+
+Run helper scripts from the `scripts/` folder next to SKILL.md where the skill directs (Checks 1–4 and Check 7). They are Python 3: try `python <script> <target>` first; if not found, retry with `python3`.

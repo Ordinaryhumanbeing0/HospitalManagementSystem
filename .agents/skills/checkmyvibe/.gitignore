@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+
+# Exclude demo-vulnerable-repo's env file so it can be checked in as a test fixture
+!examples/demo-vulnerable-repo/.env
+
+# Local Claude Code skills
+.claude/skills/
