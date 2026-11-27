@@ -1078,14 +1078,16 @@ def build_full_html(
     <div class="chapter-name">REFERENCES</div>
   </div>
   <ol class="bib-list">
-    <li>Next.js Documentation — App Router, React Server Components, and Server Actions: <code>https://nextjs.org/docs</code></li>
-    <li>Prisma ORM Documentation — Schema Modeling, Interactive Transactions, and PostgreSQL Indexes: <code>https://www.prisma.io/docs</code></li>
-    <li>Neon Serverless PostgreSQL Documentation — Connection Pooling and Branching: <code>https://neon.tech/docs</code></li>
-    <li>PostgreSQL 16 Official Documentation — Partial Indexes and Concurrency Control: <code>https://www.postgresql.org/docs/current/indexes-partial.html</code></li>
-    <li>JOSE (JSON Web Token) Library for Node.js &amp; Edge Runtimes: <code>https://github.com/panva/jose</code></li>
-    <li>Zod TypeScript-First Schema Validation Documentation: <code>https://zod.dev</code></li>
-    <li>Tailwind CSS Documentation — Utility-First Design Tokens: <code>https://tailwindcss.com/docs</code></li>
-    <li>PlantUML Official Language Reference Guide: <code>https://plantuml.com/guide</code></li>
+    <li>A. C. Babu, V. N. C. Sai Teja, A. D. Reddy, E. N. Kumar, and V. Srinivas, &ldquo;Web Based Hospital Management System,&rdquo; in <em>Proc. 2023 9th International Conference on Advanced Computing and Communication Systems (ICACCS)</em>, Vol. 1, pp. 1109&ndash;1113, 2023.</li>
+    <li>N. A. Kumar J. and S. Suresh, &ldquo;A Proposal of Smart Hospital Management Using Hybrid Cloud, IoT, ML, and AI,&rdquo; in <em>Proc. 2019 International Conference on Communication and Electronics Systems (ICCES)</em>, pp. 1082&ndash;1085, 2019.</li>
+    <li>A. Raut, D. Maru, R. Schwarz, et al., &ldquo;Design and implementation of an affordable, public sector electronic medical record in rural Nepal,&rdquo; <em>BMJ Health &amp; Care Informatics</em> (<em>Journal of Innovation in Health Informatics</em>), 2017.</li>
+    <li>C. J. Seebregts, B. W. Mamlin, P. G. Biondich, H. S. F. Fraser, D. Jazayeri, et al., &ldquo;The OpenMRS Implementers Network,&rdquo; <em>International Journal of Medical Informatics</em>, Vol. 78, No. 11, pp. 711&ndash;720, Nov. 2009.</li>
+    <li>N. Mohammed-Rajput, D. Smith, B. W. Mamlin, P. G. Biondich, and B. N. Doebbeling, &ldquo;OpenMRS, a global medical records system collaborative: factors influencing successful implementation,&rdquo; <em>AMIA Annual Symposium Proceedings</em>, 2011.</li>
+    <li>T. Cayirli and E. Veral, &ldquo;Outpatient Scheduling in Health Care: A Review of Literature,&rdquo; <em>Production and Operations Management</em>, Vol. 12, No. 4, pp. 519&ndash;549, Winter 2003.</li>
+    <li>R. S. Sandhu, E. J. Coyne, H. L. Feinstein, and C. E. Youman, &ldquo;Role-Based Access Control Models,&rdquo; <em>IEEE Computer</em>, Vol. 29, No. 2, pp. 38&ndash;47, Feb. 1996.</li>
+    <li>A. U. R. Butt, T. Mahmood, T. Saba, S. A. O. Bahaj, F. S. Alamri, M. W. Iqbal, and A. R. Khan, &ldquo;An Optimized Role-Based Access Control Using Trust Mechanism in E-Health Cloud Environment,&rdquo; <em>IEEE Access</em>, Vol. 11, pp. 138813&ndash;138826, 2023.</li>
+    <li>M. S. Baihan, &ldquo;Role-based Access Control Solution for GraphQL-based Fast Healthcare Interoperability Resources Health Application Programming Interface,&rdquo; in <em>Proc. 2022 IEEE International Conference on E-health Networking, Application &amp; Services (HealthCom)</em>, pp. 1&ndash;6, 2022.</li>
+    <li>P. A. Bernstein and N. Goodman, &ldquo;Concurrency Control in Distributed Database Systems,&rdquo; <em>ACM Computing Surveys</em>, Vol. 13, No. 2, pp. 185&ndash;221, June 1981.</li>
   </ol>
 </div>
 """
@@ -1100,3 +1102,151 @@ def build_full_html(
         f"{ch1}\n{ch2}\n{ch3}\n{ch4}\n{ch5}\n{ch6}\n{ch7}\n{ch8}\n{ch9}\n{ch10}\n{bib_and_ref}\n"
         f"</body>\n</html>"
     )
+
+
+def build_front_page2_html() -> str:
+    css = (BUILDER_DIR / "report.css").read_text(encoding="utf-8")
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Page 2 - Project Scope</title>
+<style>
+{css}
+.p2-heading {{
+  font-size: 13pt;
+  font-weight: bold;
+  margin: 0 0 6pt 0;
+}}
+.p2-sub {{
+  font-size: 12.5pt;
+  font-weight: bold;
+  margin: 12pt 0 6pt 0;
+}}
+</style>
+</head>
+<body>
+  <div class="p2-heading">Project Scope</div>
+  <p>
+    The <strong>Hospital Management System (HMS)</strong> is a full-stack clinical and hospital operations
+    platform engineered with Next.js 15 (App Router), React 19, TypeScript, Prisma ORM, and Neon Serverless
+    PostgreSQL. It replaces fragmented manual registers with three integrated worklets: <strong>Worklet 1</strong>
+    (Patient &amp; User Management), <strong>Worklet 2</strong> (Appointment Scheduling &amp; Electronic Health
+    Records), and <strong>Worklet 3</strong> (Billing, Reports &amp; System Administration), serving
+    <code>ADMIN</code>, <code>DOCTOR</code>, <code>RECEPTIONIST</code>, and <code>PATIENT</code> roles across
+    16 pages, 11 Server Action modules, 1 health API route (<code>GET /api/health</code>), and a 14-model
+    PostgreSQL schema.
+  </p>
+
+  <div class="p2-sub">Key Objectives</div>
+  <ul>
+    <li><strong>Role-Based Security &amp; Access Control:</strong> Enforce HS256 JWT authentication via HTTP-only cookies (<code>hms_auth_token</code>), Edge Middleware route guards (<code>src/middleware.ts</code>), and PostgreSQL-verified session healing (<code>requireAuth()</code>, <code>requireRole()</code>).</li>
+    <li><strong>Conflict-Free Concurrent Scheduling:</strong> Prevent double-booking under simultaneous requests using a three-layer architecture: linked-list FIFO queue serialization (<code>AppointmentRequestQueue</code>), Prisma interactive transactions (<code>prisma.$transaction</code>), and the PostgreSQL partial unique index <code>unique_active_appointment_slot</code>.</li>
+    <li><strong>Dynamic Availability &amp; Leave Awareness:</strong> Compute 30-minute slots from <code>DoctorSchedule</code> shift timings while excluding breaks (<code>breakStartTime</code>&ndash;<code>breakEndTime</code>), active <code>DoctorLeave</code> intervals, and existing non-cancelled appointments.</li>
+    <li><strong>Automated Consultation-to-Billing Workflow:</strong> Atomically save digital <code>Prescription</code> records, transition visits to <code>COMPLETED</code>, and generate itemized Indian Rupee (<code>&#8377;</code>) bills with 5% GST and multi-channel payment tracking via <code>BillingRequestQueue</code>.</li>
+    <li><strong>Auditability, Analytics &amp; Recovery:</strong> Maintain immutable <code>AuditLog</code> trails, provide 14-day revenue/footfall analytics with CSV export, and support JSON database backup/restore scripts.</li>
+  </ul>
+
+  <div class="p2-sub">Scope</div>
+  <p>
+    The system is scoped to outpatient clinics, polyclinics, and multi-specialty consultation centers requiring
+    centralized patient registration, specialist directory and schedule management, conflict-free appointment
+    booking, longitudinal medical history timelines, automated invoicing, and administrative oversight. Academically,
+    the project demonstrates applied Engineering Design and Innovation (EDI) integration across Basic Programming,
+    Object-Oriented Programming, Data Structures, Database Management Systems, Computer Networks, Operating
+    Systems, Software Engineering, and Web Technology.
+  </p>
+</body>
+</html>"""
+
+
+def build_front_page4_html() -> str:
+    css = (BUILDER_DIR / "report.css").read_text(encoding="utf-8")
+    members = [
+        ("TY125", "CHINMAY PALASKAR"),
+        ("TY144", "SHARVARI ARALKAR"),
+        ("TY136", "PRANAV CHAVAN"),
+        ("TY141", "SWARAJ KATKAR"),
+        ("TY126", "DHIRAJ BHOSALE"),
+        ("TY146", "TANUSHREE PATIL"),
+        ("TY142", "SARTHAK PATIL"),
+        ("TY148", "SAIRAM PAMPATWAR"),
+        ("TY133", "SARTHAK LOHAR"),
+        ("TY147", "TANISHKA MAPARE"),
+        ("TY140", "SHIVTEJ BHOSALE"),
+        ("TY134", "AMOL JAWARE"),
+    ]
+    rows = "\n".join(
+        f'<tr><td class="roll-col">{r}</td><td>{n}</td></tr>'
+        for r, n in members
+    )
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Page 4 - Acknowledgement</title>
+<style>
+{css}
+.ack-title {{
+  font-size: 16pt;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+  margin: 4pt 0 18pt 0;
+}}
+.ack-table {{
+  width: 82%;
+  margin: 14pt auto 0 auto;
+  font-size: 9.5pt;
+  line-height: 1.25;
+}}
+.ack-table th, .ack-table td {{
+  padding: 2.5pt 8pt;
+  border: 0.6pt solid #000000;
+}}
+.ack-table th {{
+  background-color: #f4f4f4;
+  text-align: center;
+}}
+.ack-table td.roll-col {{
+  width: 24%;
+  text-align: center;
+  font-weight: bold;
+}}
+</style>
+</head>
+<body>
+  <div class="ack-title">ACKNOWLEDGEMENT</div>
+  <p>
+    We express our sincere gratitude to our project guide, <strong>Jitendra Chavan</strong>, and EDI Coordinator
+    <strong>Ms. P. R. Balage</strong>, for their guidance, encouragement, and support throughout the preparation of
+    the <strong>Hospital Management System</strong> project.
+  </p>
+  <p>
+    We are thankful to the Department of Information Technology and Marathwada Mitra Mandal&rsquo;s College of
+    Engineering for providing the academic environment and opportunity to apply concepts from our foundational
+    subjects to a practical healthcare operations and clinical workflow management problem.
+  </p>
+  <p>
+    We also acknowledge the learning resources and academic references that supported our understanding of
+    database management systems, data structures, algorithms, object-oriented programming, computer networks,
+    operating systems, software engineering, and web technology.
+  </p>
+  <p>
+    Finally, we thank everyone who directly or indirectly contributed to the development and documentation of this
+    project.
+  </p>
+
+  <table class="ack-table">
+    <thead>
+      <tr>
+        <th>Roll No</th>
+        <th>Name of the Student</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows}
+    </tbody>
+  </table>
+</body>
+</html>"""

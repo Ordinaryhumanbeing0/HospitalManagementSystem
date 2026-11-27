@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Page 4 - Acknowledgement</title>
+<style>
+/* Academic EDI Mini-Project Report Stylesheet
+   Matches project report 1 EDI_IT.pdf (US Letter 8.5x11in, Times New Roman) */
+
+@page {
+  size: 8.5in 11in;
+  margin: 0.78in 0.85in 0.90in 0.85in;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Times New Roman", Times, Georgia, serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  color: #000000;
+  background: #ffffff;
+}
+
+/* Front-matter pages (Contents, List of Figures, List of Tables, List of Abbreviations) */
+.front-title {
+  font-size: 14pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 0 0 14pt 0;
+  letter-spacing: 0.2pt;
+}
+
+/* Chapter opener layout matching template pages 10-21 */
+.chapter-start {
+  page-break-before: always;
+}
+
+.chapter-header {
+  text-align: center;
+  margin-top: 2pt;
+  margin-bottom: 18pt;
+}
+
+.chapter-num {
+  font-size: 22pt;
+  font-weight: bold;
+  line-height: 1.25;
+  margin: 0 0 6pt 0;
+}
+
+.chapter-name {
+  font-size: 20pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.page-break {
+  page-break-before: always;
+}
+
+/* Section & Subsection headings */
+h2.sec-heading {
+  font-size: 14pt;
+  font-weight: bold;
+  margin: 14pt 0 6pt 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+h3.subsec-heading {
+  font-size: 12.5pt;
+  font-weight: bold;
+  margin: 10pt 0 4pt 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+p {
+  margin: 0 0 8pt 0;
+  text-align: justify;
+}
+
+ul,
+ol {
+  margin: 4pt 0 10pt 0;
+  padding-left: 20pt;
+}
+
+li {
+  margin-bottom: 3pt;
+  text-align: justify;
+}
+
+/* Tables matching template 0.48pt solid black grid */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8pt 0 12pt 0;
+  font-size: 10pt;
+  line-height: 1.35;
+}
+
+th,
+td {
+  border: 0.6pt solid #000000;
+  padding: 4pt 6pt;
+  vertical-align: top;
+  text-align: left;
+}
+
+th {
+  font-weight: bold;
+  background-color: #f4f4f4;
+}
+
+tr {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.toc-table {
+  font-size: 10pt;
+  line-height: 1.3;
+}
+
+.toc-table th {
+  background-color: #ffffff;
+  font-weight: normal;
+}
+
+.toc-table td.sec-col {
+  width: 14%;
+  white-space: nowrap;
+}
+
+.toc-table td.title-col {
+  width: 72%;
+}
+
+.toc-table td.page-col {
+  width: 14%;
+  text-align: center;
+}
+
+.toc-chapter-row td {
+  font-weight: bold;
+}
+
+.list-table td.num-col {
+  width: 16%;
+  white-space: nowrap;
+}
+
+.list-table td.desc-col {
+  width: 70%;
+}
+
+.list-table td.pg-col {
+  width: 14%;
+  text-align: center;
+}
+
+.abbr-table {
+  font-size: 9.5pt;
+  line-height: 1.2;
+  margin: 6pt 0;
+}
+
+.abbr-table th,
+.abbr-table td {
+  padding: 2.2pt 6pt;
+}
+
+.abbr-table th {
+  background-color: #ffffff;
+  font-weight: normal;
+}
+
+.abbr-table td.abbr-col {
+  width: 24%;
+  font-weight: bold;
+}
+
+.table-caption {
+  font-size: 10.5pt;
+  font-weight: bold;
+  text-align: center;
+  margin: 10pt 0 4pt 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+/* Figures & Diagrams */
+.figure-block {
+  margin: 8pt 0 10pt 0;
+  text-align: center;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.figure-block img {
+  max-width: 100%;
+  max-height: 6.8in;
+  width: auto;
+  height: auto;
+  display: block;
+  margin: 0 auto 5pt auto;
+  border: 0.5pt solid #cccccc;
+  padding: 3pt;
+  background: #ffffff;
+}
+
+.figure-caption {
+  font-size: 10.5pt;
+  font-weight: bold;
+  text-align: center;
+  margin: 0;
+}
+
+/* Inline code & code blocks */
+code {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 9.5pt;
+  background-color: #f6f6f6;
+  padding: 0.5pt 2.5pt;
+  border-radius: 2pt;
+}
+
+pre {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 8.8pt;
+  line-height: 1.35;
+  background-color: #f8f8f8;
+  border: 0.5pt solid #bbbbbb;
+  padding: 6pt 8pt;
+  margin: 6pt 0 10pt 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.bib-list li {
+  margin-bottom: 6pt;
+  text-align: left;
+}
+.ack-title {
+  font-size: 16pt;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+  margin: 4pt 0 18pt 0;
+}
+.ack-table {
+  width: 82%;
+  margin: 14pt auto 0 auto;
+  font-size: 9.5pt;
+  line-height: 1.25;
+}
+.ack-table th, .ack-table td {
+  padding: 2.5pt 8pt;
+  border: 0.6pt solid #000000;
+}
+.ack-table th {
+  background-color: #f4f4f4;
+  text-align: center;
+}
+.ack-table td.roll-col {
+  width: 24%;
+  text-align: center;
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+  <div class="ack-title">ACKNOWLEDGEMENT</div>
+  <p>
+    We express our sincere gratitude to our project guide, <strong>Jitendra Chavan</strong>, and EDI Coordinator
+    <strong>Ms. P. R. Balage</strong>, for their guidance, encouragement, and support throughout the preparation of
+    the <strong>Hospital Management System</strong> project.
+  </p>
+  <p>
+    We are thankful to the Department of Information Technology and Marathwada Mitra Mandal&rsquo;s College of
+    Engineering for providing the academic environment and opportunity to apply concepts from our foundational
+    subjects to a practical healthcare operations and clinical workflow management problem.
+  </p>
+  <p>
+    We also acknowledge the learning resources and academic references that supported our understanding of
+    database management systems, data structures, algorithms, object-oriented programming, computer networks,
+    operating systems, software engineering, and web technology.
+  </p>
+  <p>
+    Finally, we thank everyone who directly or indirectly contributed to the development and documentation of this
+    project.
+  </p>
+
+  <table class="ack-table">
+    <thead>
+      <tr>
+        <th>Roll No</th>
+        <th>Name of the Student</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="roll-col">TY125</td><td>CHINMAY PALASKAR</td></tr>
+<tr><td class="roll-col">TY144</td><td>SHARVARI ARALKAR</td></tr>
+<tr><td class="roll-col">TY136</td><td>PRANAV CHAVAN</td></tr>
+<tr><td class="roll-col">TY141</td><td>SWARAJ KATKAR</td></tr>
+<tr><td class="roll-col">TY126</td><td>DHIRAJ BHOSALE</td></tr>
+<tr><td class="roll-col">TY146</td><td>TANUSHREE PATIL</td></tr>
+<tr><td class="roll-col">TY142</td><td>SARTHAK PATIL</td></tr>
+<tr><td class="roll-col">TY148</td><td>SAIRAM PAMPATWAR</td></tr>
+<tr><td class="roll-col">TY133</td><td>SARTHAK LOHAR</td></tr>
+<tr><td class="roll-col">TY147</td><td>TANISHKA MAPARE</td></tr>
+<tr><td class="roll-col">TY140</td><td>SHIVTEJ BHOSALE</td></tr>
+<tr><td class="roll-col">TY134</td><td>AMOL JAWARE</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

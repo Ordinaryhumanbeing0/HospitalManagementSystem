@@ -1,0 +1,102 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam ArrowColor #1D5AA8
+skinparam ArrowThickness 1.3
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam UsecaseBorderColor #1D5AA8
+skinparam ActorBackgroundColor #F0F6FF
+skinparam ActorBorderColor #10284B
+skinparam nodesep 22
+skinparam ranksep 35
+top to bottom direction
+
+actor "Patient" as Patient #E8F1FF
+actor "Doctor" as Doctor #E8F8F0
+actor "Receptionist" as Receptionist #FFF7E6
+actor "Admin" as Admin #FDECEC
+
+rectangle "Hospital Management System — Role-Based Use Cases" #F8FAFC {
+
+  package "Authentication" as P_Auth #FFFFFF {
+    usecase "Register Patient Account" as UC_Reg
+    usecase "Sign In / Out (JWT)" as UC_Login
+    UC_Reg -[hidden]down- UC_Login
+  }
+
+  package "Appointment Booking" as P_Appt #FFFFFF {
+    usecase "Check Available Slots" as UC_Slots
+    usecase "Book / Reschedule / Cancel" as UC_Book
+    usecase "Check-In, Reassign & No-Show" as UC_CheckIn
+    UC_Slots -[hidden]down- UC_Book
+    UC_Book -[hidden]down- UC_CheckIn
+  }
+
+  package "Clinical & Medical Records" as P_Clin #FFFFFF {
+    usecase "Manage Schedule & Leaves" as UC_Sched
+    usecase "Consult & Prescribe" as UC_Rx
+    usecase "Upload & View Reports" as UC_Reports
+    UC_Sched -[hidden]down- UC_Rx
+    UC_Rx -[hidden]down- UC_Reports
+  }
+
+  package "Billing & Payments" as P_Bill #FFFFFF {
+    usecase "Generate Itemized Bill" as UC_GenBill
+    usecase "Record Payment & Print" as UC_Pay
+    UC_GenBill -[hidden]down- UC_Pay
+  }
+
+  package "Administration & Reporting" as P_Admin #FFFFFF {
+    usecase "Manage Patients, Doctors & Depts" as UC_Dir
+    usecase "Revenue Reports, CSV & Audit" as UC_Rep
+    usecase "View System Notifications" as UC_Notif
+    UC_Dir -[hidden]down- UC_Rep
+    UC_Rep -[hidden]down- UC_Notif
+  }
+}
+
+' 3 packages top row, 2 packages bottom row
+P_Auth -[hidden]right- P_Appt
+P_Appt -[hidden]right- P_Clin
+UC_Login -[hidden]down- UC_GenBill
+UC_CheckIn -[hidden]down- UC_Dir
+P_Bill -[hidden]right- P_Admin
+
+Patient --> UC_Reg
+Patient --> UC_Login
+Patient --> UC_Slots
+Patient --> UC_Book
+Patient --> UC_Reports
+Patient --> UC_Pay
+Patient --> UC_Notif
+
+Doctor --> UC_Login
+Doctor --> UC_Slots
+Doctor --> UC_Sched
+Doctor --> UC_Rx
+Doctor --> UC_Reports
+Doctor --> UC_GenBill
+Doctor --> UC_Notif
+
+Receptionist --> UC_Login
+Receptionist --> UC_Book
+Receptionist --> UC_CheckIn
+Receptionist --> UC_Reports
+Receptionist --> UC_GenBill
+Receptionist --> UC_Pay
+Receptionist --> UC_Dir
+
+Admin --> UC_Login
+Admin --> UC_CheckIn
+Admin --> UC_GenBill
+Admin --> UC_Dir
+Admin --> UC_Rep
+Admin --> UC_Notif
+
+@enduml

@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from build_report import BUILDER_DIR, ROOT, build_pdf
-from report_content import build_full_html
+from report_content import build_front_page2_html, build_front_page4_html, build_full_html
 
 DIAG_DIR = ROOT / "scratch" / "diagrams"
 
@@ -98,6 +98,8 @@ def main() -> None:
         toc_targets=TOC_TARGETS,
         fig_targets=FIG_TARGETS,
         tbl_targets=TBL_TARGETS,
+        page2_html=build_front_page2_html(),
+        page4_html=build_front_page4_html(),
     )
     print(json.dumps(result, indent=2))
 

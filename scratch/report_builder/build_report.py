@@ -184,6 +184,8 @@ def build_pdf(
     fig_targets: list[tuple[str, str]],
     tbl_targets: list[tuple[str, str]],
     output_pdf: Path = OUTPUT_PDF,
+    page2_html: str | None = None,
+    page4_html: str | None = None,
 ) -> dict:
     browser = find_browser()
     pass1_html = BUILDER_DIR / "_pass1.html"
@@ -217,13 +219,37 @@ def build_pdf(
         render_html_to_pdf(final_html, body_pdf, browser)
         toc_pages, fig_pages, tbl_pages = toc_pages2, fig_pages2, tbl_pages2
 
-    # Merge pages 1-4 of template PDF + stamped body pages (5+)
+    # Assemble pages 1-4: keep template pages 1 & 3 verbatim; use custom pages 2 & 4 if supplied
     tpl_reader = PdfReader(str(TEMPLATE_PDF))
     body_reader = PdfReader(str(body_pdf))
     writer = PdfWriter()
 
-    for i in range(4):
-        writer.add_page(tpl_reader.pages[i])
+    def _render_single_front_page(html_str: str, page_num: int, stem: str):
+        hp = BUILDER_DIR / f"_{stem}.html"
+        pp = BUILDER_DIR / f"_{stem}.pdf"
+        hp.write_text(html_str, encoding="utf-8")
+        render_html_to_pdf(hp, pp, browser)
+        rd = PdfReader(str(pp))
+        if len(rd.pages) != 1:
+            raise RuntimeError(f"Front page {page_num} ({stem}) must be 1 page, got {len(rd.pages)}")
+        pg = rd.pages[0]
+        pg.merge_page(make_stamp_page(page_num))
+        return pg
+
+    # Page 1: template verbatim
+    writer.add_page(tpl_reader.pages[0])
+    # Page 2: custom HMS Project Scope / Key Objectives / Scope (or template fallback)
+    if page2_html:
+        writer.add_page(_render_single_front_page(page2_html, 2, "page2"))
+    else:
+        writer.add_page(tpl_reader.pages[1])
+    # Page 3: template verbatim
+    writer.add_page(tpl_reader.pages[2])
+    # Page 4: custom Acknowledgement with mentor & team members (or template fallback)
+    if page4_html:
+        writer.add_page(_render_single_front_page(page4_html, 4, "page4"))
+    else:
+        writer.add_page(tpl_reader.pages[3])
 
     for idx, page in enumerate(body_reader.pages):
         pg_num = 5 + idx

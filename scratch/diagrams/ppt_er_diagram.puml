@@ -1,0 +1,152 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam classAttributeIconSize 0
+skinparam ArrowColor #1D5AA8
+skinparam ArrowThickness 1.4
+skinparam EntityBackgroundColor #F8FAFC
+skinparam EntityBorderColor #10284B
+hide circle
+hide methods
+skinparam linetype ortho
+skinparam nodesep 35
+skinparam ranksep 38
+
+entity "User" as User {
+  * id : String <<PK>>
+  --
+  email : String <<UQ>>
+  role : Role
+  name : String
+  isActive : Boolean
+}
+
+entity "Department" as Dept {
+  * id : String <<PK>>
+  --
+  name : String <<UQ>>
+}
+
+entity "Doctor" as Doc {
+  * id : String <<PK>>
+  --
+  userId : String <<FK,UQ>>
+  departmentId : String <<FK>>
+  specialization : String
+  consultationFee : Decimal
+}
+
+entity "Patient" as Pat {
+  * id : String <<PK>>
+  --
+  userId : String <<FK,UQ>>
+  dateOfBirth : DateTime
+  gender, bloodGroup
+}
+
+entity "DoctorSchedule" as Sched {
+  * id : String <<PK>>
+  --
+  doctorId : String <<FK>>
+  dayOfWeek, slotDuration
+  startTime, endTime
+}
+
+entity "DoctorLeave" as Leave {
+  * id : String <<PK>>
+  --
+  doctorId : String <<FK>>
+  startDate, endDate
+}
+
+entity "Appointment" as Appt {
+  * id : String <<PK>>
+  --
+  patientId : String <<FK>>
+  doctorId : String <<FK>>
+  appointmentDate, timeSlot
+  status : AppointmentStatus
+}
+
+entity "Prescription" as Rx {
+  * id : String <<PK>>
+  --
+  appointmentId : String <<FK,UQ>>
+  patientId, doctorId <<FK>>
+  diagnosis, medications : Json
+}
+
+entity "MedicalReport" as MedRep {
+  * id : String <<PK>>
+  --
+  patientId : String <<FK>>
+  doctorId? : String <<FK>>
+  title, reportType, fileUrl
+}
+
+entity "Bill" as Bill {
+  * id : String <<PK>>
+  --
+  patientId : String <<FK>>
+  appointmentId? : String <<FK,UQ>>
+  totalAmount, paidAmount
+  status : PaymentStatus
+  items : Json
+}
+
+entity "Payment" as Pay {
+  * id : String <<PK>>
+  --
+  billId : String <<FK>>
+  amount : Decimal
+  method : PaymentMethod
+}
+
+entity "Notification" as Notif {
+  * id : String <<PK>>
+  --
+  userId : String <<FK>>
+  title, message, isRead
+}
+
+entity "AuditLog" as Audit {
+  * id : String <<PK>>
+  --
+  userId? : String <<FK>>
+  action, details, ipAddress
+}
+
+entity "SystemSetting" as Sys {
+  * id : String <<PK>>
+  --
+  key : String <<UQ>>
+  value : String
+}
+
+User ||--o| Pat
+User ||--o| Doc
+User ||--o{ Notif
+User |o--o{ Audit
+
+Dept ||--o{ Doc
+Doc ||--o{ Sched
+Doc ||--o{ Leave
+
+Pat ||--o{ Appt
+Doc ||--o{ Appt
+
+Appt ||--o| Rx
+Appt ||--o| Bill
+
+Pat ||--o{ MedRep
+Doc |o--o{ MedRep
+
+Pat ||--o{ Bill
+Bill ||--o{ Pay
+
+@enduml

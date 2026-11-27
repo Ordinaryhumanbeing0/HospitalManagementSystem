@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Page 2 - Project Scope</title>
+<style>
+/* Academic EDI Mini-Project Report Stylesheet
+   Matches project report 1 EDI_IT.pdf (US Letter 8.5x11in, Times New Roman) */
+
+@page {
+  size: 8.5in 11in;
+  margin: 0.78in 0.85in 0.90in 0.85in;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Times New Roman", Times, Georgia, serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  color: #000000;
+  background: #ffffff;
+}
+
+/* Front-matter pages (Contents, List of Figures, List of Tables, List of Abbreviations) */
+.front-title {
+  font-size: 14pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 0 0 14pt 0;
+  letter-spacing: 0.2pt;
+}
+
+/* Chapter opener layout matching template pages 10-21 */
+.chapter-start {
+  page-break-before: always;
+}
+
+.chapter-header {
+  text-align: center;
+  margin-top: 2pt;
+  margin-bottom: 18pt;
+}
+
+.chapter-num {
+  font-size: 22pt;
+  font-weight: bold;
+  line-height: 1.25;
+  margin: 0 0 6pt 0;
+}
+
+.chapter-name {
+  font-size: 20pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.page-break {
+  page-break-before: always;
+}
+
+/* Section & Subsection headings */
+h2.sec-heading {
+  font-size: 14pt;
+  font-weight: bold;
+  margin: 14pt 0 6pt 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+h3.subsec-heading {
+  font-size: 12.5pt;
+  font-weight: bold;
+  margin: 10pt 0 4pt 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+p {
+  margin: 0 0 8pt 0;
+  text-align: justify;
+}
+
+ul,
+ol {
+  margin: 4pt 0 10pt 0;
+  padding-left: 20pt;
+}
+
+li {
+  margin-bottom: 3pt;
+  text-align: justify;
+}
+
+/* Tables matching template 0.48pt solid black grid */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8pt 0 12pt 0;
+  font-size: 10pt;
+  line-height: 1.35;
+}
+
+th,
+td {
+  border: 0.6pt solid #000000;
+  padding: 4pt 6pt;
+  vertical-align: top;
+  text-align: left;
+}
+
+th {
+  font-weight: bold;
+  background-color: #f4f4f4;
+}
+
+tr {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.toc-table {
+  font-size: 10pt;
+  line-height: 1.3;
+}
+
+.toc-table th {
+  background-color: #ffffff;
+  font-weight: normal;
+}
+
+.toc-table td.sec-col {
+  width: 14%;
+  white-space: nowrap;
+}
+
+.toc-table td.title-col {
+  width: 72%;
+}
+
+.toc-table td.page-col {
+  width: 14%;
+  text-align: center;
+}
+
+.toc-chapter-row td {
+  font-weight: bold;
+}
+
+.list-table td.num-col {
+  width: 16%;
+  white-space: nowrap;
+}
+
+.list-table td.desc-col {
+  width: 70%;
+}
+
+.list-table td.pg-col {
+  width: 14%;
+  text-align: center;
+}
+
+.abbr-table {
+  font-size: 9.5pt;
+  line-height: 1.2;
+  margin: 6pt 0;
+}
+
+.abbr-table th,
+.abbr-table td {
+  padding: 2.2pt 6pt;
+}
+
+.abbr-table th {
+  background-color: #ffffff;
+  font-weight: normal;
+}
+
+.abbr-table td.abbr-col {
+  width: 24%;
+  font-weight: bold;
+}
+
+.table-caption {
+  font-size: 10.5pt;
+  font-weight: bold;
+  text-align: center;
+  margin: 10pt 0 4pt 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+/* Figures & Diagrams */
+.figure-block {
+  margin: 8pt 0 10pt 0;
+  text-align: center;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.figure-block img {
+  max-width: 100%;
+  max-height: 6.8in;
+  width: auto;
+  height: auto;
+  display: block;
+  margin: 0 auto 5pt auto;
+  border: 0.5pt solid #cccccc;
+  padding: 3pt;
+  background: #ffffff;
+}
+
+.figure-caption {
+  font-size: 10.5pt;
+  font-weight: bold;
+  text-align: center;
+  margin: 0;
+}
+
+/* Inline code & code blocks */
+code {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 9.5pt;
+  background-color: #f6f6f6;
+  padding: 0.5pt 2.5pt;
+  border-radius: 2pt;
+}
+
+pre {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 8.8pt;
+  line-height: 1.35;
+  background-color: #f8f8f8;
+  border: 0.5pt solid #bbbbbb;
+  padding: 6pt 8pt;
+  margin: 6pt 0 10pt 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.bib-list li {
+  margin-bottom: 6pt;
+  text-align: left;
+}
+.p2-heading {
+  font-size: 13pt;
+  font-weight: bold;
+  margin: 0 0 6pt 0;
+}
+.p2-sub {
+  font-size: 12.5pt;
+  font-weight: bold;
+  margin: 12pt 0 6pt 0;
+}
+</style>
+</head>
+<body>
+  <div class="p2-heading">Project Scope</div>
+  <p>
+    The <strong>Hospital Management System (HMS)</strong> is a full-stack clinical and hospital operations
+    platform engineered with Next.js 15 (App Router), React 19, TypeScript, Prisma ORM, and Neon Serverless
+    PostgreSQL. It replaces fragmented manual registers with three integrated worklets: <strong>Worklet 1</strong>
+    (Patient &amp; User Management), <strong>Worklet 2</strong> (Appointment Scheduling &amp; Electronic Health
+    Records), and <strong>Worklet 3</strong> (Billing, Reports &amp; System Administration), serving
+    <code>ADMIN</code>, <code>DOCTOR</code>, <code>RECEPTIONIST</code>, and <code>PATIENT</code> roles across
+    16 pages, 11 Server Action modules, 1 health API route (<code>GET /api/health</code>), and a 14-model
+    PostgreSQL schema.
+  </p>
+
+  <div class="p2-sub">Key Objectives</div>
+  <ul>
+    <li><strong>Role-Based Security &amp; Access Control:</strong> Enforce HS256 JWT authentication via HTTP-only cookies (<code>hms_auth_token</code>), Edge Middleware route guards (<code>src/middleware.ts</code>), and PostgreSQL-verified session healing (<code>requireAuth()</code>, <code>requireRole()</code>).</li>
+    <li><strong>Conflict-Free Concurrent Scheduling:</strong> Prevent double-booking under simultaneous requests using a three-layer architecture: linked-list FIFO queue serialization (<code>AppointmentRequestQueue</code>), Prisma interactive transactions (<code>prisma.$transaction</code>), and the PostgreSQL partial unique index <code>unique_active_appointment_slot</code>.</li>
+    <li><strong>Dynamic Availability &amp; Leave Awareness:</strong> Compute 30-minute slots from <code>DoctorSchedule</code> shift timings while excluding breaks (<code>breakStartTime</code>&ndash;<code>breakEndTime</code>), active <code>DoctorLeave</code> intervals, and existing non-cancelled appointments.</li>
+    <li><strong>Automated Consultation-to-Billing Workflow:</strong> Atomically save digital <code>Prescription</code> records, transition visits to <code>COMPLETED</code>, and generate itemized Indian Rupee (<code>&#8377;</code>) bills with 5% GST and multi-channel payment tracking via <code>BillingRequestQueue</code>.</li>
+    <li><strong>Auditability, Analytics &amp; Recovery:</strong> Maintain immutable <code>AuditLog</code> trails, provide 14-day revenue/footfall analytics with CSV export, and support JSON database backup/restore scripts.</li>
+  </ul>
+
+  <div class="p2-sub">Scope</div>
+  <p>
+    The system is scoped to outpatient clinics, polyclinics, and multi-specialty consultation centers requiring
+    centralized patient registration, specialist directory and schedule management, conflict-free appointment
+    booking, longitudinal medical history timelines, automated invoicing, and administrative oversight. Academically,
+    the project demonstrates applied Engineering Design and Innovation (EDI) integration across Basic Programming,
+    Object-Oriented Programming, Data Structures, Database Management Systems, Computer Networks, Operating
+    Systems, Software Engineering, and Web Technology.
+  </p>
+</body>
+</html>
