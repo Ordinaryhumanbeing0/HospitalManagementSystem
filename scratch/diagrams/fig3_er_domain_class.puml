@@ -1,0 +1,275 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam dpi 150
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 10
+skinparam classAttributeIconSize 0
+skinparam ArrowColor #1E3A5F
+skinparam linetype ortho
+
+title <b>Database Schema (Prisma / PostgreSQL) & OOP Domain Class Diagram</b>
+
+package "Prisma Database Schema (prisma/schema.prisma — 14 Models, 4 Enums)" as DBPkg #F4F7FB {
+
+  enum Role {
+    ADMIN
+    DOCTOR
+    PATIENT
+    RECEPTIONIST
+  }
+
+  enum AppointmentStatus {
+    SCHEDULED
+    PENDING
+    CONFIRMED
+    CHECKED_IN
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+    RESCHEDULED
+    NO_SHOW
+  }
+
+  enum PaymentStatus {
+    UNPAID
+    PARTIALLY_PAID
+    PAID
+    REFUNDED
+    CANCELLED
+  }
+
+  enum PaymentMethod {
+    CASH
+    CARD
+    UPI
+    INSURANCE
+    NET_BANKING
+  }
+
+  class User {
+    + id : String <<PK>>
+    + email : String <<Unique>>
+    + passwordHash : String
+    + role : Role
+    + name : String
+    + phone : String?
+    + isActive : Boolean
+  }
+
+  class Department {
+    + id : String <<PK>>
+    + name : String <<Unique>>
+    + description : String?
+  }
+
+  class Doctor {
+    + id : String <<PK>>
+    + userId : String <<FK, Unique>>
+    + departmentId : String <<FK>>
+    + specialization : String
+    + qualification : String
+    + consultationFee : Decimal(10,2)
+    + isActive : Boolean
+  }
+
+  class Patient {
+    + id : String <<PK>>
+    + userId : String <<FK, Unique>>
+    + dateOfBirth : DateTime
+    + gender : String
+    + bloodGroup : String?
+    + address : String?
+    + emergencyContact : String?
+    + medicalHistorySummary : String?
+  }
+
+  class DoctorSchedule {
+    + id : String <<PK>>
+    + doctorId : String <<FK>>
+    + dayOfWeek : Int
+    + startTime : String
+    + endTime : String
+    + breakStartTime : String?
+    + breakEndTime : String?
+    + slotDuration : Int
+    + isActive : Boolean
+  }
+
+  class DoctorLeave {
+    + id : String <<PK>>
+    + doctorId : String <<FK>>
+    + startDate : Date
+    + endDate : Date
+    + reason : String?
+  }
+
+  class Appointment {
+    + id : String <<PK>>
+    + patientId : String <<FK>>
+    + doctorId : String <<FK>>
+    + appointmentDate : Date
+    + timeSlot : String
+    + status : AppointmentStatus
+    + reason : String?
+    --
+    <<Partial Unique Index>>
+    unique_active_appointment_slot
+    (status <> 'CANCELLED')
+  }
+
+  class Prescription {
+    + id : String <<PK>>
+    + appointmentId : String <<FK, Unique>>
+    + patientId : String <<FK>>
+    + doctorId : String <<FK>>
+    + diagnosis : String
+    + symptoms : String?
+    + followUpDate : Date?
+    + medications : Json
+  }
+
+  class MedicalReport {
+    + id : String <<PK>>
+    + patientId : String <<FK>>
+    + doctorId : String? <<FK>>
+    + title : String
+    + reportType : String
+    + fileUrl : String
+    + notes : String?
+  }
+
+  class Bill {
+    + id : String <<PK>>
+    + patientId : String <<FK>>
+    + appointmentId : String? <<FK, Unique>>
+    + totalAmount : Decimal(10,2)
+    + discount : Decimal(10,2)
+    + paidAmount : Decimal(10,2)
+    + status : PaymentStatus
+    + items : Json
+  }
+
+  class Payment {
+    + id : String <<PK>>
+    + billId : String <<FK>>
+    + amount : Decimal(10,2)
+    + method : PaymentMethod
+    + transactionRef : String?
+    + receivedAt : DateTime
+  }
+
+  class AuditLog {
+    + id : String <<PK>>
+    + userId : String? <<FK>>
+    + action : String
+    + details : String?
+    + ipAddress : String?
+    + createdAt : DateTime
+  }
+
+  class Notification {
+    + id : String <<PK>>
+    + userId : String <<FK>>
+    + title : String
+    + message : String
+    + isRead : Boolean
+  }
+
+  class SystemSetting {
+    + id : String <<PK>>
+    + key : String <<Unique>>
+    + value : String
+    + description : String?
+  }
+
+  User "1" -- "0..1" Patient : Cascade
+  User "1" -- "0..1" Doctor : Cascade
+  User "1" -- "0..*" AuditLog : SetNull
+  User "1" -- "0..*" Notification : Cascade
+
+  Department "1" -- "0..*" Doctor : Restrict
+  Doctor "1" -- "0..*" DoctorSchedule : Cascade
+  Doctor "1" -- "0..*" DoctorLeave : Cascade
+
+  Patient "1" -- "0..*" Appointment
+  Doctor "1" -- "0..*" Appointment
+
+  Appointment "1" -- "0..1" Prescription
+  Appointment "1" -- "0..1" Bill
+  Patient "1" -- "0..*" Prescription
+  Doctor "1" -- "0..*" Prescription
+  Patient "1" -- "0..*" MedicalReport
+  Doctor "0..1" -- "0..*" MedicalReport
+  Patient "1" -- "0..*" Bill
+  Bill "1" -- "0..*" Payment : Cascade
+}
+
+package "OOP Domain Classes (src/lib/domain/models.ts)" as DomainPkg #EEF4FF {
+  class AppointmentModel {
+    + id, patientId, doctorId : string
+    + appointmentDate : Date
+    + timeSlot, status : string
+    + isCancellable() : boolean
+    + isReschedulable() : boolean
+    + isCheckableIn() : boolean
+    + isStartable() : boolean
+    + isConsultable() : boolean
+    + getFormattedTime() : string
+    + getDateString() : string
+    + isPastDate() : boolean
+  }
+
+  class MedicalReportModel {
+    + id, patientId, title, reportType, fileUrl : string
+    + isImagingReport() : boolean
+    + getDisplaySummary() : string
+  }
+
+  class PrescriptionModel {
+    + id, appointmentId, diagnosis : string
+    + medications : MedicationItemType[]
+    + getMedicationCount() : number
+    + getFormattedMedicationList() : string[]
+  }
+
+  class BillModel {
+    + id, patientId : string
+    + totalAmount, discount, paidAmount : number
+    + itemsData : BillItemsData
+    + getBalance() : number
+    + isFullyPaid() : boolean
+    + isPartiallyPaid() : boolean
+    + getItemCount() : number
+    + getCollectionPercentage() : number
+    + {static} formatCurrency(val) : string
+  }
+
+  class PaymentModel {
+    + id, billId, method : string
+    + amount : number
+    + isValidPayment(balance) : boolean
+    + getFormattedMethod() : string
+  }
+
+  class ReportModel {
+    + data : RevenueReportData
+    + toCsvString() : string
+  }
+
+  class NotificationModel {
+    + id, userId, title, message : string
+    + isRead : boolean
+    + getTimeAgo() : string
+  }
+}
+
+Appointment ..> AppointmentModel
+MedicalReport ..> MedicalReportModel
+Prescription ..> PrescriptionModel
+Bill ..> BillModel
+Payment ..> PaymentModel
+Notification ..> NotificationModel
+
+@enduml

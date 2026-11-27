@@ -1,0 +1,97 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam dpi 150
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 11
+skinparam packageStyle rectangle
+skinparam ArrowColor #1E3A5F
+left to right direction
+
+title <b>Hospital Management System — Role-Based Use Case Diagram</b>
+
+actor "Patient\n(PATIENT)" as Patient #E8F1FF
+actor "Doctor\n(DOCTOR)" as Doctor #E8F8F0
+
+rectangle "Hospital Management System (App Router + Server Actions)" {
+  package "Worklet 1: Auth & Directory" #F8FAFC {
+    usecase "Register Patient Account\n(registerPatientAction)" as UC_Reg
+    usecase "Login / Logout & Session\n(loginAction, logoutAction)" as UC_Auth
+    usecase "Browse Depts & Doctors\n(getDepartments, getDoctors)" as UC_Browse
+    usecase "Manage Patient Profiles\n(create, update, dossier)" as UC_PatMgmt
+    usecase "Manage Own Schedule & Leaves\n(updateSchedule, addLeave)" as UC_DocSched
+    usecase "Manage Depts & Doctors\n(CRUD, toggleActive, delete)" as UC_AdminDir
+  }
+
+  package "Worklet 2: Appointments & Clinical" #F8FAFC {
+    usecase "Check Available Slots\n(getAvailableSlotsAction)" as UC_Slots
+    usecase "Book / Reschedule / Cancel\nAppointment (appointmentQueue)" as UC_Book
+    usecase "Check-In Patient\n(checkInAppointmentAction)" as UC_CheckIn
+    usecase "Reassign Doctor / No-Show\n(reassign, markNoShow)" as UC_Reassign
+    usecase "Start Consultation & Prescribe\n(createPrescription + Auto-Bill)" as UC_Consult
+    usecase "Upload & View Medical Reports\n(uploadMedicalReport, history)" as UC_Reports
+  }
+
+  package "Worklet 3: Billing, Analytics & Audit" #F8FAFC {
+    usecase "Generate Itemized Bill\n(generateBillAction, billingQueue)" as UC_GenBill
+    usecase "Record Payment & Print Invoice\n(recordPaymentAction)" as UC_Pay
+    usecase "View Notifications\n(getNotifications, markAsRead)" as UC_Notif
+    usecase "Revenue Reports & Export CSV\n(getRevenueReports, exportCsv)" as UC_Analytics
+    usecase "Operational Metrics & Audit Logs\n(getAdminMetrics, getAuditLogs)" as UC_Audit
+  }
+}
+
+actor "Receptionist\n(RECEPTIONIST)" as Receptionist #FFF7E6
+actor "Administrator\n(ADMIN)" as Admin #FDECEC
+
+' Left actors -> use cases
+Patient --> UC_Reg
+Patient --> UC_Auth
+Patient --> UC_Browse
+Patient --> UC_Slots
+Patient --> UC_Book : "own"
+Patient --> UC_CheckIn : "own"
+Patient --> UC_Reports : "view own"
+Patient --> UC_Pay : "pay own"
+Patient --> UC_Notif
+
+Doctor --> UC_Auth
+Doctor --> UC_Browse
+Doctor --> UC_DocSched : "own"
+Doctor --> UC_Slots
+Doctor --> UC_Book
+Doctor --> UC_CheckIn
+Doctor --> UC_Consult : "own"
+Doctor --> UC_Reports : "assigned"
+Doctor --> UC_GenBill
+Doctor --> UC_Notif
+
+' Right actors <- use cases (reversed arrow syntax puts actors on right cleanly)
+UC_Auth <-- Receptionist
+UC_Browse <-- Receptionist
+UC_PatMgmt <-- Receptionist : "create/update"
+UC_Slots <-- Receptionist
+UC_Book <-- Receptionist : "any patient"
+UC_CheckIn <-- Receptionist
+UC_Reassign <-- Receptionist
+UC_Reports <-- Receptionist : "upload/view"
+UC_GenBill <-- Receptionist
+UC_Pay <-- Receptionist
+UC_Notif <-- Receptionist
+
+UC_Auth <-- Admin
+UC_AdminDir <-- Admin
+UC_PatMgmt <-- Admin : "full CRUD"
+UC_DocSched <-- Admin : "any doctor"
+UC_Book <-- Admin : "all"
+UC_Reassign <-- Admin
+UC_Consult <-- Admin
+UC_Reports <-- Admin
+UC_GenBill <-- Admin
+UC_Pay <-- Admin
+UC_Analytics <-- Admin
+UC_Audit <-- Admin
+UC_Notif <-- Admin
+
+@enduml

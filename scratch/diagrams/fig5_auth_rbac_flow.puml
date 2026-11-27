@@ -1,0 +1,86 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam dpi 130
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 11
+skinparam ArrowColor #1E3A5F
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #1E3A5F
+skinparam SwimlaneBorderColor #64748B
+skinparam SwimlaneWidth same
+
+title <b>Authentication, Edge Middleware & Server-Side RBAC Authorization Flow</b>
+
+|Browser / Client|
+start
+:User submits /login\nor requests Protected Route;
+
+if (Request Type?) then (Login)
+  |Server Action (auth.ts)|
+  :loginAction()\nValidate loginSchema (Zod);
+  |PostgreSQL (Prisma)|
+  :prisma.user.findUnique(email)\n+ patient.id, doctor.id;
+  |Server Action (auth.ts)|
+  if (User exists &\nbcrypt.compare OK?) then (yes)
+    :signJWT(SessionUser, '7d')\nvia jose HS256;
+    :Set HTTP-only Cookie\nhms_auth_token (7d);
+    :logAudit('LOGIN_SUCCESS');
+    |Browser / Client|
+    :Redirect to\nROLE_DASHBOARDS[role];
+    stop
+  else (no)
+    :logAudit('LOGIN_FAILED');
+    |Browser / Client|
+    :Return invalid\ncredentials error;
+    stop
+  endif
+
+else (Page / Action)
+  |Edge Middleware (middleware.ts)|
+  :Read hms_auth_token cookie\n& jose.jwtVerify(HS256);
+  if (Valid JWT on\n/, /login, /register?) then (yes)
+    :Redirect to\nROLE_DASHBOARDS[role];
+    stop
+  endif
+  if (Path in\nPROTECTED_PREFIXES?) then (yes)
+    if (Valid JWT?) then (no)
+      :Redirect to\n/login?callbackUrl=...;
+      stop
+    elseif (Prefix Role Allowed?\n/admin->ADMIN\n/doctor->DOCTOR|ADMIN\n/receptionist->RECEP|ADMIN\n/patient->PATIENT|ADMIN) then (no)
+      :Redirect to user's\ndefault dashboard;
+      stop
+    else (yes)
+      :Render Page;
+    endif
+  else (Shared Route)
+    :Load page & call\ngetAuthUserAction();
+  endif
+
+  |RBAC Guard (rbac.ts)|
+  :Server Action calls\nrequireAuth() / requireRole();
+  :getSessionUser() verifies JWT;
+  |PostgreSQL (Prisma)|
+  :prisma.user.findFirst(id OR email)\nCheck exists & isActive;
+  |RBAC Guard (rbac.ts)|
+  if (!dbUser || !isActive?) then (yes)
+    :Throw UNAUTHORIZED;
+    stop
+  endif
+  if (PATIENT missing\npatientId?) then (yes)
+    :Auto-provision\nPatient record;
+  endif
+  if (ID/role/profile\ndrifted?) then (yes)
+    :Session Healing:\nrefresh JWT cookie;
+  endif
+  if (allowedRoles.includes\n(user.role)?) then (yes)
+    :Execute Business Logic\n& Ownership Check;
+    stop
+  else (no)
+    :Throw FORBIDDEN;
+    stop
+  endif
+endif
+
+@enduml

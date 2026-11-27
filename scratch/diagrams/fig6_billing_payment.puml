@@ -1,0 +1,89 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam dpi 140
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 11
+skinparam SequenceMessageAlign center
+skinparam maxMessageSize 175
+skinparam ArrowColor #1E3A5F
+<style>
+participant {
+  Padding 8
+}
+</style>
+
+title <b>Billing & Payment Processing Sequence and Status Lifecycle</b>
+
+actor "Staff / Patient" as User
+participant "Billing Actions\n(billing.ts)" as BillingAct
+participant "BillModel &\nPaymentModel" as Domain
+participant "billingQueue\n(FifoQueue<T>)" as Queue
+database "PostgreSQL\n(Bill & Payment)" as DB
+participant "logAudit() &\nNotifQueue" as AuditNotif
+
+== Phase 1: Itemized Bill Generation (generateBillAction) ==
+
+User -> BillingAct : generateBillAction(appointmentId, discount%, tax%, customItems)
+activate BillingAct
+BillingAct -> BillingAct : requireRole([ADMIN, RECEPTIONIST, DOCTOR])\n+ generateBillSchema.safeParse()
+BillingAct -> DB : prisma.appointment.findUnique(patient, doctor, prescription, bill)
+DB --> BillingAct : Appointment record
+
+alt appointment.status == CANCELLED
+  BillingAct --> User : { success: false, message: "Cannot bill CANCELLED" }
+else bill already exists
+  BillingAct --> User : { success: true, data: existingBill }
+else valid billable appointment
+  BillingAct -> BillingAct : Compute subtotal, discount & tax:\nConsult Fee + Meds (INR 250) + Labs (INR 750, max 2) + Custom
+  BillingAct -> Queue : billingQueue.enqueueTask("bill_gen_" + appointmentId)
+  activate Queue
+  Queue -> DB : prisma.bill.create(totalAmount, discount, paidAmount: 0, status: UNPAID)
+  DB --> Queue : Created Bill [UNPAID]
+  deactivate Queue
+  BillingAct -> AuditNotif : logAudit('BILL_GENERATED') + notify Patient
+  BillingAct --> User : { success: true, data: createdBill }
+end
+deactivate BillingAct
+
+note over BillingAct
+  createPrescriptionAction() in medical-record.ts also auto-generates
+  a Bill (Consult Fee + INR 250/med + 5% GST) inside consultation completion.
+end note
+
+== Phase 2: Atomic Payment Processing (recordPaymentAction) ==
+
+User -> BillingAct : recordPaymentAction(billId, amount, method, transactionRef)
+activate BillingAct
+BillingAct -> BillingAct : requireAuth() + recordPaymentSchema.safeParse()\nVerify PATIENT owns bill.patientId
+BillingAct -> DB : prisma.bill.findUnique(billId)
+DB --> BillingAct : Bill (totalAmount, paidAmount, status)
+BillingAct -> Domain : new PaymentModel().isValidPayment(remainingBalance)
+alt amount <= 0 or amount > remainingBalance
+  BillingAct --> User : { success: false, message: "Amount exceeds balance" }
+else valid payment amount
+  BillingAct -> Queue : billingQueue.enqueueTask("pay_" + billId + "_" + ts)
+  activate Queue
+  Queue -> DB : prisma.$transaction(maxWait:15s, timeout:30s)
+  activate DB
+  DB -> DB : Pessimistic re-read: latestBill = tx.bill.findUnique(billId)\nVerify amount <= (latestTotal - latestPaid + 0.001)
+  DB -> DB : newPaid = latestPaid + amount\nnewStatus = (newPaid >= latestTotal) ? PAID : PARTIALLY_PAID
+  DB -> DB : tx.payment.create(...) + tx.bill.update(paidAmount, status)
+  DB --> Queue : { payment, updatedBill }
+  deactivate DB
+  deactivate Queue
+  BillingAct -> DB : Fetch populatedBill (patient, payments, doctor)
+  BillingAct -> AuditNotif : logAudit('PAYMENT_RECORDED')\n+ createNotificationHelper('Payment Receipt Confirmed')
+  BillingAct --> User : { success: true, data: { payment, bill } }
+end
+deactivate BillingAct
+
+note over DB
+  **PaymentStatus Enum Lifecycle:**
+  UNPAID --> PARTIALLY_PAID (0 < paidAmount < totalAmount)
+  UNPAID / PARTIALLY_PAID --> PAID (paidAmount >= totalAmount)
+  (Enum also supports REFUNDED & CANCELLED)
+end note
+
+@enduml

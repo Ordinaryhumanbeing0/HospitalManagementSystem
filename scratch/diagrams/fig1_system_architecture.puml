@@ -1,0 +1,73 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam dpi 130
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam ArrowColor #1E3A5F
+skinparam ArrowThickness 1.4
+top to bottom direction
+
+title <b>Hospital Management System — 3-Tier System Architecture</b>
+
+package "1. Presentation & Client Layer (Next.js 15 App Router + React 19 + Tailwind CSS)" as ClientLayer #F4F7FB {
+  [Role-Specific Portals\n/admin/dashboard, /admin/audit\n/doctor/dashboard, /receptionist/dashboard,\n/patient/dashboard] as Portals #FFFFFF
+  [Shared Operational Pages\n/appointments, /appointments/book\n/patients, /doctors, /departments\n/medical-records, /billing, /reports] as SharedUI #FFFFFF
+  [UI Shell & Browser APIs\nDashboardShell, Navbar, Modal,\nNotificationBell (20s), DemoSwitcher,\nwindow.print() & CSV Blob Export] as ShellUI #FFFFFF
+}
+
+package "2. Application & Business Logic Layer (Edge Middleware + Server Actions + Core Lib)" as AppLayer #EEF4FF {
+  [Edge Middleware (src/middleware.ts)\njose HS256 JWT Verify & Prefix Guards] as Middleware #DDE9FF
+  [REST Health API\nGET /api/health\n(SELECT 1 + Latency)] as HealthAPI #DDE9FF
+
+  rectangle "Server Actions ('use server' — 11 Modules in src/actions/)" as Actions #FFFFFF {
+    [auth.ts\nlogin, register,\nlogout, getAuthUser] as ActAuth
+    [appointment.ts\ngetSlots, book, reschedule,\ncancel, checkIn, startConsult] as ActAppt
+    [medical-record.ts\ncreatePrescription (+Auto-Bill),\nuploadReport, getHistory] as ActMed
+    [billing.ts & report.ts\ngenerateBill, recordPayment,\nrevenue & CSV export] as ActBill
+    [Core & Admin Actions\npatient, doctor, department,\nadmin, audit, notification] as ActCore
+  }
+
+  rectangle "Security, Validation, Queues & OOP Domain (src/lib/)" as LibCore #FFFFFF {
+    [RBAC & Audit (src/lib/auth/)\nrequireAuth(), requireRole(),\nbcryptjs (10), logAudit()] as RBAC
+    [Zod Validation\n(src/lib/validations/*.ts)] as ZodVal
+    [FIFO Queues (src/lib/queue/)\nFifoQueue<T> O(1) Linked List\nappointmentQueue, billingQueue,\nnotificationQueue] as Queues
+    [OOP Domain Models\n(src/lib/domain/models.ts)\nAppointment, Bill, Payment,\nPrescription, MedicalReport,\nReport, Notification] as Domain
+  }
+}
+
+package "3. Data & Persistence Layer (Prisma ORM 6.4.1 + Neon PostgreSQL)" as DataLayer #F3FAF6 {
+  [Prisma Client Singleton (src/lib/prisma.ts)\nInteractive $transaction, Aggregates & groupBy] as PrismaClient #DFF5E8
+
+  database "Neon Serverless PostgreSQL\n(DATABASE_URL / DATABASE_URL_UNPOOLED)" as NeonDB #FFFFFF {
+    [Identity & Staff\nUser, Department, Doctor,\nDoctorSchedule, DoctorLeave, Patient] as DBIdentity
+    [Clinical & Billing\nAppointment, Prescription,\nMedicalReport, Bill, Payment] as DBClinical
+    [Governance & Indexes\nAuditLog, Notification, SystemSetting\n+ unique_active_appointment_slot] as DBGovernance
+  }
+
+  [CLI Backup & Restore\nscripts/backup-db.ts & restore-db.ts\n(backups/*.json)] as BackupCLI #DFF5E8
+}
+
+Portals -[hidden]right- SharedUI
+SharedUI -[hidden]right- ShellUI
+
+ClientLayer --> Middleware : HTTPS Page Navigation\n(hms_auth_token cookie)
+ClientLayer --> Actions : Next.js Server Action RPC
+ClientLayer --> HealthAPI : HTTP GET
+
+Middleware --> RBAC : Verify JWT & Role Prefix
+Actions --> ZodVal : Input Validation
+Actions --> RBAC : Session Healing & Auth
+Actions --> Queues : FIFO Task Serialization
+Actions --> Domain : Business Rules & CSV
+Actions --> PrismaClient : CRUD & Transactions
+HealthAPI --> PrismaClient : SELECT 1 Health Check
+
+PrismaClient --> NeonDB : Pooled / Direct SQL
+BackupCLI --> NeonDB : Snapshot / Upsert Restore
+
+@enduml

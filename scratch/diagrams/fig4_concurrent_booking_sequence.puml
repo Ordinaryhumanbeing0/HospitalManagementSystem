@@ -1,0 +1,99 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam dpi 140
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 11
+skinparam SequenceMessageAlign center
+skinparam maxMessageSize 170
+skinparam ArrowColor #1E3A5F
+<style>
+participant {
+  Padding 8
+}
+</style>
+
+title <b>Concurrent Appointment Booking Sequence Diagram (FIFO Queue + ACID Transaction + DB Unique Index)</b>
+
+actor "Client A" as ClientA
+actor "Client B" as ClientB
+participant "bookAppointmentAction\n(appointment.ts)" as Action
+participant "requireAuth()\n& Zod" as AuthZod
+participant "appointmentQueue\n(FifoQueue<T>)" as Queue
+participant "prisma.$transaction\n(15s wait / 30s)" as Tx
+database "PostgreSQL\n(Neon)" as DB
+participant "Domain, Audit\n& NotifQueue" as PostTx
+
+par Simultaneous Booking Requests for Same Slot (Doctor X, Date D, 10:30)
+  ClientA -> Action : bookAppointmentAction(inputA)
+else
+  ClientB -> Action : bookAppointmentAction(inputB)
+end
+
+group Request Validation & Patient Resolution (Both Requests)
+  Action -> AuthZod : requireAuth() + bookAppointmentSchema.safeParse()
+  AuthZod --> Action : SessionUser + validated input + resolvedPatientId
+  Action -> Action : Reject past date or past timeSlot today
+end
+
+group Layer 1: Application-Level FIFO Queue Serialization
+  Action -> Queue : enqueueTask("doc_date_slot", taskA)
+  activate Queue
+  Queue -> Queue : FifoQueue.enqueue(taskA) [O(1)]
+  Action -> Queue : enqueueTask("doc_date_slot", taskB)
+  Queue -> Queue : FifoQueue.enqueue(taskB) [O(1)]
+  note right of Queue
+    isProcessing = true;
+    taskA dequeued first while
+    taskB waits in FIFO queue.
+  end note
+end
+
+group Layer 2 & 3: Task A — Atomic Transaction & Partial Unique Index
+  Queue -> Tx : processNext() -> execute taskA
+  activate Tx
+  Tx -> DB : tx.doctor.findUnique(schedules, leaves)
+  DB --> Tx : Doctor active, not on leave
+  Tx -> Tx : Verify weekday schedule, shift bounds & break exclusion
+  Tx -> DB : tx.appointment.findFirst(patientId, date, slot, status != CANCELLED)
+  DB --> Tx : null (no duplicate patient booking)
+  Tx -> DB : tx.appointment.findFirst(doctorId, date, slot, status != CANCELLED)
+  DB --> Tx : null (slot free)
+  Tx -> DB : tx.appointment.create(status: CONFIRMED)
+  note left of DB
+    Enforced by partial unique index:
+    unique_active_appointment_slot
+    WHERE status <> 'CANCELLED'
+  end note
+  DB --> Tx : Created Appointment
+  Tx --> Queue : Commit & return appointment
+  deactivate Tx
+  Queue --> Action : Resolve Promise (Client A)
+end
+
+group Post-Transaction Domain, Audit & Notifications (Client A)
+  Action -> PostTx : new AppointmentModel() + logAudit('APPOINTMENT_BOOKED')
+  Action -> PostTx : createNotificationHelper() (Patient A & Doctor)
+  Action --> ClientA : { success: true, message: "Appointment booked successfully!" }
+end
+
+group Task B — Dequeued After Task A Completes (Conflict Rejected)
+  Queue -> Tx : finally { isProcessing = false; processNext() } -> taskB
+  activate Tx
+  Tx -> DB : tx.doctor.findUnique(...) + schedule/leave checks
+  Tx -> DB : tx.appointment.findFirst(doctorId, date, slot, status != CANCELLED)
+  DB --> Tx : Existing CONFIRMED Appointment (Task A)
+  Tx --> Queue : Throw Error("Time slot is already reserved.")
+  note right of Tx
+    Across multiple workers, DB index
+    unique_active_appointment_slot
+    still blocks duplicate active rows.
+  end note
+  deactivate Tx
+  Queue --> Action : Reject Promise (Client B, totalErrors++)
+  deactivate Queue
+  Action --> ClientB : { success: false, message: "Time slot is already reserved..." }
+end
+
+@enduml

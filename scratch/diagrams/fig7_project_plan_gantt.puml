@@ -1,0 +1,47 @@
+@startgantt
+scale 2
+printscale weekly
+Project starts 2026-07-06
+saturday are closed
+sunday are closed
+
+title Hospital Management System — Project Plan & Schedule (2026-27 SEM-I)
+
+-- Phase 1: Requirement Analysis & Design --
+[Literature Survey & SRS] as [P1] lasts 10 days
+[Architecture & 3NF Schema] as [P2] starts at [P1]'s end and lasts 8 days
+[RBAC, UML & ER Modeling] as [P3] starts at [P2]'s end and lasts 6 days
+
+-- Phase 2: Worklet 1 (Identity & Directories) --
+[Auth (JWT, bcrypt) & Middleware] as [W1A] starts at [P3]'s end and lasts 8 days
+[Patient/Doctor/Dept CRUD & UI] as [W1B] starts at [W1A]'s end and lasts 10 days
+
+-- Phase 3: Worklet 2 (Scheduling & Clinical) --
+[Schedules, Leaves & Slot Engine] as [W2A] starts at [W1B]'s end and lasts 8 days
+[FifoQueue & Booking Transaction] as [W2B] starts at [W2A]'s end and lasts 8 days
+[Consultations, Rx & Lab Reports] as [W2C] starts at [W2B]'s end and lasts 8 days
+
+-- Phase 4: Worklet 3 (Billing & Ops) --
+[Billing Queue, Payments & Invoices] as [W3A] starts at [W2C]'s end and lasts 8 days
+[Reports, CSV, Audit & Backups] as [W3B] starts at [W3A]'s end and lasts 7 days
+
+-- Phase 5: Testing & Documentation --
+[Concurrency & E2E Test Suites] as [T1] starts at [W3B]'s end and lasts 8 days
+[TypeScript/Prisma & DB Checks] as [T2] starts at [T1]'s end and lasts 5 days
+[Report & Review] as [DOC] starts at [T2]'s end and lasts 7 days
+
+[P1] is colored in #2563EB
+[P2] is colored in #2563EB
+[P3] is colored in #2563EB
+[W1A] is colored in #059669
+[W1B] is colored in #059669
+[W2A] is colored in #D97706
+[W2B] is colored in #D97706
+[W2C] is colored in #D97706
+[W3A] is colored in #7C3AED
+[W3B] is colored in #7C3AED
+[T1] is colored in #DC2626
+[T2] is colored in #DC2626
+[DOC] is colored in #0F172A
+
+@endgantt
